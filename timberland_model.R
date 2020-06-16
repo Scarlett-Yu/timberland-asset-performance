@@ -43,41 +43,48 @@ REIT = as.data.frame(allts[,"REIT"])
 row.names(REIT)=as.yearqtr(time(allts))
 # ARIMA 
 # ncreif
-model.arima = auto.arima(xts.ncreif , max.order = c(2, 0 ,2) , stationary = TRUE , trace = T , ic = 'bic')
+model.arima = auto.arima(xts.ncreif, stationary = TRUE , trace = T , ic = 'aic')
 
 checkresiduals(model.arima)
 # REIT
-model.arima = auto.arima(REIT, stationary = TRUE , trace = T , ic = 'aicc')
+model.arima2 = auto.arima(REIT, stationary = TRUE , trace = T , ic = 'aic')
+checkresiduals(model.arima2)
+
 # box test
-Box.test(model.arima$residuals^2,lag=12, type="Ljung-Box")
+Box.test(model.arima$residuals^2,lag = 24,type="Ljung-Box")
+Box.test(model.arima2$residuals^2, lag = 100, type="Ljung-Box")
+#colnames(allts)
 for(i in 1:ncol(allts)){
   y = allts[,i]
-  res=Box.test((y - mean(y))^2, lag=12, type="Ljung-Box")
+  res=Box.test((y - mean(y))^2, lag = 12,type="Ljung-Box")
   print(res$p.value)
 }
 
 # GARCH model
 library("rugarch")
-spec = ugarchspec(variance.model = list(model="sGARCH",
-                                        garchOrder=c(1,1)),
-                  #mean.model = list(armaOrder=c(0,0)),
+spec = ugarchspec(variance.model = list(model="sGARCH",garchOrder=c(1,1)),
+                  mean.model = list(armaOrder=c(1,1)),
                   distribution.model = "std")
 # Nelson's egarch model
-egarch.spec = ugarchspec(variance.model=list(model="eGARCH",
-                                               garchOrder=c(1,1)),
-                           #mean.model=list(armaOrder=c(0,0), include.mean=TRUE),  
-                           distribution.model="jsu", fixed.pars=list())
+egarch.spec = ugarchspec(variance.model=list(model="eGARCH",garchOrder=c(1,1)),
+                         mean.model=list(armaOrder=c(1,1)),  
+                         distribution.model="std")
 garch.fit1 = ugarchfit(egarch.spec, xts.ncreif)
+# simulation
+set.seed(1234)
+sim = ugarchsim(garch.fit1,n.sim=2000, n.start=0, m.sim=1, startMethod="sample")
+simseries = as.data.frame(sim@simulation$seriesSim)
+auto.arima(simseries, stationary = TRUE , trace = T , ic = 'bic')
+
 
 plot(garch.fit1, which="all")
 
 # backtesting model
-ctrl = list(tol = 1e-7, delta = 1e-9)
-garchroll1 <- ugarchroll(egarch.spec, xts.ncreif, n.start = 30, refit.every = 4, refit.window = "moving", VaR.alpha = 0.01 ,solver.control = ctrl, fit.control = list(scale = 1))
-report(garchroll1, type = "VaR")
+garchroll1 <- ugarchroll(egarch.spec, data=simseries, n.start = 1000, refit.every = 30, refit.window = "moving",VaR.alpha = c(0.01, 0.025, 0.05),solver="hybrid", fit.control = list(scale = 1))
+report(garchroll1, type = "VaR",VaR.alpha = 0.05, conf.level = 0.95)
 
 plot(garchroll1, which="all")
-
+plot(garchroll1, which=4)
 # Forecasting Risk and VaR
 garchfcst <- ugarchforecast(garch.fit1, n.ahead = 12)
 garchfcst
@@ -89,14 +96,6 @@ garchfcst2<-ugarchforecast(garch.fit2, data = NULL, n.ahead = 10, n.roll = 5, ex
 garchfcst2
 plot(garchfcst2,which=2)
 plot(garchfcst2,which=4)
-
-
-
-
-
-
-
-
 
 
 
