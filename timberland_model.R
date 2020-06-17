@@ -77,8 +77,7 @@ tseq = seq(as.Date("1987/1/1"), as.Date("2020/6/1"), "weeks")
 sim = ugarchsim(garch.fit1,n.sim=length(tseq), n.start=0, m.sim=1, startMethod="sample")
 simseries = xts(sim@simulation$seriesSim, order.by = tseq)
 auto.arima(simseries , trace = T , ic = 'bic',
-           mean.model=list(armaOrder=c(1,1)),  
-           distribution.model="std")  
+
 garch.fit1 = ugarchfit(egarch.spec, xts.ncreif)
 # simulation
 set.seed(1234)
