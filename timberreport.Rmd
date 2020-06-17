@@ -44,22 +44,30 @@ data from 1987Q1 to 2020Q1 are used in this study.
 Generalized autoregressive conditional heteroskedasticity (GARCH) models are used to exam the time-varying conditional variances. 
 
 ## Results
-```{r}
+```{r, warning=FALSE}
 load("timberland.Rdata")
 library(tseries)
 library(forecast)
 library(dygraphs)
+library(PerformanceAnalytics)
+require(ggplot2)
+require(GGally)
+library(psych)
 ```
 
 ## 3.1 Descriptive analysis 
+This is a interactively graphical representation of selected quarterly return indices from 1987 Q1 to 2020 Q1. Some clear pattern could be observed. First, NCREIF is much less volatile than REIT, SP500, RU2000. Second, REIT follows SP500 closely but NTI doesn't. For example, both REIT and SP500 suffered from a big loss during 2008 financial crisis, whereas NCREIF kept a positive returns until 2009/Q2, where they only got a slightly negative return value. Some people said it's because timberland market tends to lag the public equity market. But some also argues that it's because of the biological growth of trees wouldn't stop as the market went into depression. 
 ```{r}
-dygraph(allxts*100, main = "Index values of analyzed asset quarterly returns", ylab = "Return%")%>% 
+dygraph(allxts*100, main = "Quarterly returns of analyzed assets", ylab = "Return%")%>% 
+  dyHighlight(highlightSeriesOpts = list(strokeWidth = 3))%>%
   dyRangeSelector()%>%
-  dyLegend(width = 800)
+  dyLegend(width = 500)%>%
+  dyOptions(colors = RColorBrewer::brewer.pal(6, "Dark2"))
+
 ```
 
-
-```{r}
+The unconditional correlations of the return series were studied by calculating the correlation coefficients and by plotting the pairwise scatter plots, as showed in the following graph. In this portfolio, the correlation of NCREIF with all financial assets are uniformly low, except for the 3 month Treasury bill (CA).  
+```{r, message=FALSE}
 ggpairs(as.data.frame(allts))+theme_bw()
 ```
 
