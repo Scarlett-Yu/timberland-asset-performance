@@ -44,27 +44,33 @@ data from 1987Q1 to 2020Q1 are used in this study.
 Generalized autoregressive conditional heteroskedasticity (GARCH) models are used to exam the time-varying conditional variances. 
 
 ## Results
-```{r}
+```{r, message=FALSE}
 load("timberland.Rdata")
 library(tseries)
 library(forecast)
 library(dygraphs)
+library(PerformanceAnalytics)
+require(ggplot2)
+require(GGally)
+library(psych)
+library(xts)
 ```
 
 ## 3.1 Descriptive analysis 
+A graphical representation of selected return indices is shown in the following interactive garph. All of the asset classes are starting from 1987 Q1 and ending up to 2020 Q1. 
 ```{r}
-dygraph(allxts*100, main = "Index values of analyzed asset quarterly returns", ylab = "Return%")%>% 
+dygraph(allxts*100, main = "Quarterly returns of analyzed assets", ylab = "Return%")%>% 
   dyRangeSelector()%>%
-  dyLegend(width = 800)
+  dyLegend(width = 500)
 ```
 
 
-```{r}
+```{r, message=FALSE}
 ggpairs(as.data.frame(allts))+theme_bw()
 ```
 
 
-```{r}
+```{r, warning=FALSE}
 describe(allxts)[,-1]
 
 VaR(allts, p=.95, method="modified")
@@ -74,18 +80,19 @@ apply(allts,2,jarque.bera.test)
 # stationarity
 apply(allts,2,adf.test)
 apply(allts,2,pp.test)
+```
 
-
+```{r, warning=FALSE}
 #test stationarity and normality
+op = par(mfrow=c(1,2))
 for(i in 1:ncol(allxts)){
   #plot acf
-  acf(na.omit(allxts[,i])^2,lag.max = 100,xlab = colnames(allxts)[i], ylab = 'ACF', main=' ')
+  acf(na.omit(allxts[,i]),lag.max = 100,xlab = colnames(allxts)[i], ylab = 'ACF', main=' ')
   #plot pacf
-  pacf(na.omit(allxts[,i])^2,lag.max = 100,xlab = colnames(allxts)[i], ylab = 'PACF', main=' ')
+  pacf(na.omit(allxts[,i]),lag.max = 100,xlab = colnames(allxts)[i], ylab = 'PACF', main=' ')
 }
 
 ```
-
 
 ## 3.2 Portfolio Optimization
 
