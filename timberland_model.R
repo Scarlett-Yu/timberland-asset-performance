@@ -68,6 +68,7 @@ spec = ugarchspec(variance.model = list(model="sGARCH",garchOrder=c(1,1)),
                   distribution.model = "std")
 # Nelson's egarch model
 egarch.spec = ugarchspec(variance.model=list(model="eGARCH",garchOrder=c(1,1)),
+<<<<<<< HEAD
                          mean.model=list(armaOrder=c(0,0)),  
                          distribution.model="std")
 garch.fit1 = ugarchfit(egarch.spec, xts.ncreif)
@@ -77,13 +78,28 @@ tseq = seq(as.Date("1987/1/1"), as.Date("2020/6/1"), "weeks")
 sim = ugarchsim(garch.fit1,n.sim=length(tseq), n.start=0, m.sim=1, startMethod="sample")
 simseries = xts(sim@simulation$seriesSim, order.by = tseq)
 auto.arima(simseries , trace = T , ic = 'bic')
+=======
+                         mean.model=list(armaOrder=c(1,1)),  
+                         distribution.model="std")
+garch.fit1 = ugarchfit(egarch.spec, xts.ncreif)
+# simulation
+set.seed(1234)
+sim = ugarchsim(garch.fit1,n.sim=2000, n.start=0, m.sim=1, startMethod="sample")
+simseries = as.data.frame(sim@simulation$seriesSim)
+auto.arima(simseries, stationary = TRUE , trace = T , ic = 'bic')
+>>>>>>> 194ec94fe0a66faf971c93c8690509f2e6d8165c
 
 
 plot(garch.fit1, which="all")
 
 # backtesting model
+<<<<<<< HEAD
 garchroll1 <- ugarchroll(egarch.spec, data=simseries, n.start = 1000, refit.every = 100, refit.window = "moving",VaR.alpha = 0.01,solver="hybrid", fit.control = list(scale = 1))
 report(garchroll1, type = "VaR",VaR.alpha = 0.01, conf.level = 0.99)
+=======
+garchroll1 <- ugarchroll(egarch.spec, data=simseries, n.start = 1000, refit.every = 30, refit.window = "moving",VaR.alpha = c(0.01, 0.025, 0.05),solver="hybrid", fit.control = list(scale = 1))
+report(garchroll1, type = "VaR",VaR.alpha = 0.05, conf.level = 0.95)
+>>>>>>> 194ec94fe0a66faf971c93c8690509f2e6d8165c
 
 plot(garchroll1, which="all")
 plot(garchroll1, which=4)
@@ -104,6 +120,9 @@ plot(garchfcst2,which=4)
 
 
 
+<<<<<<< HEAD
 
 
 
+=======
+>>>>>>> 194ec94fe0a66faf971c93c8690509f2e6d8165c
