@@ -6,16 +6,14 @@ library(vars)
 # NTI Timberland
 # NTI National Council of Real Estate Investment Fiduciaries Property
 # FTSE NAREIT All Equity REITS Total Return Index is a free float adjusted market capitalization weighted index that includes all tax qualified REITs listed in the NYSE, AMEX, and NASDAQ National Market.
-# LCA3TRUU Index The Bloomberg Barclays Aaa Corporate Index measures the Aaa-rated, fixed-rate, taxable corporate bond market. It includes USD denominated securities publicly issued by US and non-US industrial, utility and financial issuers. (Future Ticker: I08218US)
-timber = c("TMBERLND Index","NPNCRE Index","FNERTR Index", "MOODCAAA Index")
+
 # timberland companies
 # 1. Pope Resources 
-# 2. Cambium Global Timberland Ltd
+# 2. CatchMark
 # 3. Potlatch
 # 4. Rayonier
 # 5. Weyerhaeuser
 # 6. WEST FRASER TIMBER CO LTD
-company_index = c("POPE US Equity","TREE LN Equity","PCH US Equity","RYN US Equity","WY US Equity","WFT CN Equity")
 
 # extracted data function
 data_extract = function(ticker){
@@ -36,7 +34,7 @@ NTI[,2] = NTI[,2]/100
 NPI = data_extract("NPPITR Index")
 NPI[,2] = NPI[,2]/100
 Pope_data = data_extract("POPE US Equity")
-Cambium = data_extract("TREE LN Equity")
+CatchMark = data_extract("CTT US Equity")
 Potlatch = data_extract("PCH US Equity")
 Rayonier = data_extract("RYN US Equity")
 Weyerhaeuser= data_extract("WY US Equity")
@@ -68,7 +66,7 @@ NTI$Date=fun(NTI$Date,"%Y-%m-%d")
 NPI$Date=fun(NPI$Date,"%Y-%m-%d")
 
 Pope_data$Date=fun(Pope_data$Date,"%Y-%m-%d")
-Cambium$Date=fun(Cambium$Date,"%Y-%m-%d")
+CatchMark$Date=fun(CatchMark$Date,"%Y-%m-%d")
 Potlatch$Date=fun(Potlatch$Date,"%Y-%m-%d")
 Rayonier$Date=fun(Rayonier$Date,"%Y-%m-%d")
 Weyerhaeuser$Date=fun(Weyerhaeuser$Date,"%Y-%m-%d")
@@ -81,7 +79,7 @@ row.names(tbill3mca) = fun(row.names(tbill3mca) ,"%Y-%m-%d")
 
 #combination of all public data
 
-all = merge(Pope_data,Cambium,by="Date",all = TRUE)
+all = merge(Pope_data,CatchMark,by="Date",all = TRUE)
 all = merge(all,Potlatch,by="Date",all = TRUE)
 all = merge(all,Rayonier,by="Date",all = TRUE)
 all = merge(all,Weyerhaeuser,by="Date",all = TRUE)
