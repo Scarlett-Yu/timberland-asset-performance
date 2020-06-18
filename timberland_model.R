@@ -1,3 +1,4 @@
+require(devtools)
 load("timberland.Rdata")
 library(tseries)
 library(forecast)
@@ -6,10 +7,9 @@ library(PerformanceAnalytics)
 require(ggplot2)
 require(GGally)
 library(psych)
-library(xts)
 #####################descriptive statistics############################
 #visualization
-dygraph(allxts*100, main = "Index values of analyzed asset quarterly returns", ylab = "Return%")%>% 
+dygraph(allxts*100, main = "Index values of analyzed asset quarterly returns", ylab = "Return%")%>%
   dyRangeSelector()%>%
   dyLegend(width = 800)
 
@@ -42,7 +42,7 @@ row.names(NCREIF) <- NCREIF$Date
 ncreif = NCREIF["TMBERLND Index"]
 REIT = as.data.frame(allts[,"REIT"])
 row.names(REIT)=as.yearqtr(time(allts))
-# ARIMA 
+# ARIMA
 # ncreif
 model.arima = auto.arima(xts.ncreif, stationary = TRUE , trace = T , ic = 'aic')
 
@@ -77,8 +77,7 @@ tseq = seq(as.Date("1987/1/1"), as.Date("2020/6/1"), "weeks")
 sim = ugarchsim(garch.fit1,n.sim=length(tseq), n.start=0, m.sim=1, startMethod="sample")
 simseries = xts(sim@simulation$seriesSim, order.by = tseq)
 auto.arima(simseries , trace = T , ic = 'bic',
-                         mean.model=list(armaOrder=c(1,1)),   
-                         distribution.model="std")  
+
 garch.fit1 = ugarchfit(egarch.spec, xts.ncreif)
 # simulation
 set.seed(1234)
@@ -108,8 +107,6 @@ garchfcst2<-ugarchforecast(garch.fit2, data = NULL, n.ahead = 10, n.roll = 5, ex
 garchfcst2
 plot(garchfcst2,which=2)
 plot(garchfcst2,which=4)
-
-
 
 
 
