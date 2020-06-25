@@ -90,22 +90,23 @@ all = merge(all,T_bonds, by="Date", all = TRUE)
 row.names(all) = all$Date
 all$Date=NULL
 #plot.ts(all)
+# replace NA with 0
+all[is.na(all)] <- 0
+# compute REITs
+timberpub_n = 6
+REITs = as.data.frame(rowMeans(all[,c(1:6)]))
+colnames(REITs)= c("Timber REITs")
+all = cbind(all[,c(7:9)], REITs)
 pub_return = apply(all,2,function(x) diff(x)/head(x,-1))
 Tbill = tbill3mca[row.names(tbill3mca)>=NTI$Date[1]&row.names(tbill3mca)<=NTI$Date[nrow(NTI)],]/100
 NCREIF = merge(NTI, NPI, by="Date")
 all_return = cbind(NCREIF,pub_return[row.names(pub_return)>=NTI$Date[1],],Tbill)
 row.names(all_return) = all_return$Date
 all_return$Date=NULL
-# replace NA with 0
-all_return[is.na(all_return)] <- 0
-timberpub_n = 6
-pub_w = na.omit(as.matrix(all_return[,c(3:8)])%*%rep(1/timberpub_n,timberpub_n))
-colnames(pub_w)= c("REIT")
-all_return2 = cbind(all_return[,-c(3:8)], pub_w)
 
 #convert to time series
-allts = ts(all_return2, frequency = 4, start = c(1987, 1))
-colnames(allts) <- c("NTI","NPI", "SP500", "RU2000","T-bonds10Y","T-bills3M","REIT")
+allts = ts(all_return, frequency = 4, start = c(1987, 1))
+colnames(allts) <- c("NTI","NPI", "SP500", "RU2000","T-bonds10Y","Timber REITs","T-bills3M")
 allxts <- as.xts(allts)
 
 save.image(file = "timberland.RData")
