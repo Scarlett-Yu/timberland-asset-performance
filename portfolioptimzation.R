@@ -299,3 +299,4 @@ tailoredFrontierPlot(object=shortFrontier)
 
 
 # chart.RollingPerformance
+

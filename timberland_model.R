@@ -12,6 +12,15 @@ library(psych)
 dygraph(allxts*100, main = "Index values of analyzed asset quarterly returns", ylab = "Return%")%>%
   dyRangeSelector()%>%
   dyLegend(width = 800)
+#colnames(allxts)
+#[1] "NTI"          "NPI"          "SP500"        "RU2000"       "T-bonds10Y"   "Timber REITs"
+#[7] "T-bills3M"
+op = par(mfrow = c(3, 2))
+for (i in 2:7){
+  p = plot(allts[,c(1,i)], main=paste("Quarterly return of NTI vs.",colnames(allxts)[i]) ,plot.type="single",col=c(1, i) ,ylab="Return %")
+  print(p)
+} 
+
 
 ggpairs(as.data.frame(allts))+theme_bw()
 describe(allxts)[,-1]

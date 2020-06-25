@@ -1,0 +1,362 @@
+---
+title: "Timberland Project Report"
+author: "Yijia Yu"
+date: "18/06/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## 1. Introduction
+
+  Timberland investment instruments are often used as an alternative asset class in the public and private pension fund maneger's portfolio. Unlike the traditional financial tools such as stocks, bonds, cash, timberland asset has the benefit of low correlation to the stock market and the tendency of rise over in a long run. Therefore, timberland assets not only makes the portfolio more diversified but also minimizes the volatility. A powerful component of timberland return drivers is biological growth, which is independent of all factors typically impacting other investments and makes timberland asset distinguishing from others.
+
+#### Timberland Industry in Canada
+  The forestry industry is a key contributor to Canada’s economy, with real GDP growth recorded at 0.7 percent in 2017. This comes as no surprise, as there were around 308.94 million hectares of forest area recorded in Canada in 2019
+
+  The majority of Canada’s forests are owned by the provinces in which they are located, with just 1.6 percent being owned federally. The provincial and territorial governments are responsible for managing forest conservation, with strict laws in place to shape forest practices. These stringent laws are particularly important when it comes to halting logging practices and encouraging reforestation, as extensive deforestation was carried out by European settlers in Canada throughout the 18th and 19th centuries.
+The wood product manufacturing sector is the most lucrative of the forestry industries, with a nominal GDP of approximately 11 billion Canadian dollars in 2017. Western Forest Products, a lumber company based in British Columbia, is one of the key players in the forestry industry with an annual revenue of around 1.2 billion Canadian dollars in 2018. As a result, British Columbia employs by far the most people in the forestry and logging industry, followed by Quebec.
+The United States is the main trading partner of Canada when it comes to forest resources, with Canadian exports worth around 24.24 billion Canadian dollars in 2017. Lumber, sawmill and millwork products are the most traded Canadian forest products, with exports worth just over 15 billion Canadian dollars in 2018 globally.
+
+  In spite of today’s challenging economic environment, the long-term supply and demand fundamentals of timberland bode well for the patient investor who thinks in terms of decades and not quarters. A growing canadian and global population with a rising standard of living will continue to increase demand on a finite supply of timberland.
+
+#### About this study
+
+  The main purpose of this study is to investigate long-term financial performance metrics of both private and public timberland investments. I will employ the modern portfolio theory to evaluate its
+performance and to analyze its diversification effects. 
+
+### Data used in this study
+
+1. Private timberland market
+
+Returns of private equity timberland investment performance is approximated by the NCREIF Timberland Index (NTI), which is a quarterly time series composite return measure of investment performance of a large pool of individual U.S. timber properties acquired in the private market for investment purposes only. 
+
+2. Public timberland market
+
+As of July 2019, there is four publicly traded REITs that specialize in timberland. Together, they own more than 17 million acres of timberland properties in the U.S., Canada, New Zealand and other locations. The four REITs compose the timber sector of the FTSE NAREIT All REIT index are listed below:
+* Potlatch 
+* CatchMark
+* Rayonier 
+* Weyerhaeuser
+
+3. To examine the role of timberland assets in a mixed portfolio, assets including large-cap stocks, small-cap stocks, returns of private- and public-equaty real estate, treasury bonds, and treasury bills are considered in this study. 
+Returns on those asset classes are approximated by the S&P 500 Index (SP500), Russell 2000 Index (RU2000), National Council of Real Estate Investment Fiduciaries Property Index (NPI) and National Association of Real Estate Investment Trust (NAREIT) 10-Year Treasury bonds yield, and 3-month treasury bills respectively. 
+
+## 2. Methods 
+
+## 2.1 Modern portfolio theory
+  The modern portfolio theory introduced by Markowitz (1952) establishes the foundation of portfolio optimization and asset allocation strategies. This theory targets to optimize the portfolio returns through balancing the weighted combination of asset classes in the portfolio while minimize the risk. Mathematically, M risky assets (i=1,2,...,m) with individual returns $R = (R_1, R_2,...,R_m)^T$. Investors construct the portfolios by adjusting the weights of assets $w = (w_1, w_2,...,w_m)^T$ with constraints of $\sum_iw_i=1$ and $w_i>0$ (no short selling). The mean and covariance of returns are $$E(R) = \alpha = (\alpha_1,...,\alpha_m)^T$$, 
+$$Cov(R) = \Sigma = \begin{bmatrix}
+\Sigma_{1,1} & ... & \Sigma_{1,m}\\
+\vdots &  & \vdots\\
+\Sigma_{m,1} & ... & \Sigma_{m,m}\\
+\end{bmatrix}$$ 
+
+Therefore, the portfolio expected return can be calculated as $E(R) =w'\alpha$, and variance as $var(R) = w'\Sigma w$. Let's then assume that the portfolio risk $F$ is a function $w$ and $E(r)$. The optimized portfolio under the modern portfolio theory is found from the solution of the optimization problem
+$$MinF(w, r)\\subject\ to\ w'\alpha=\alpha_0\\ \ w'1_m = 1 ,w_i>0$$
+where $\alpha_0$ is the assigned target return. Using the modern portfolio theory, one can study the efficient frontiers (portfolios with the minimized risk measure given a target return). Also this theory can determine the optimal asset allocations either in single and multiple periods. 
+
+
+
+## 2.2 Portfolio optimzation framework
+1. The mean variance (M-V) portfolio
+
+Under the mean variance framework, a mixed-asset portfolio can be optimized by minimizing the risk subject to a given target $\mu$: 
+$$\underset{w}{Min}\ var(R)=\frac12w^T\sum w \\ s.t. w^T \alpha=\alpha_0\\ \sum_{i=1}^{n}w_i=1 ,w_i>0$$ 
+Solving the optimization problem by iteratively changing the weights of assets, the mean-variance frontier represents return and risk combination of all possible efficient portfolio. 
+
+To solve this problem, we define the lagrangian: 
+$$L(w, \lambda_1, \lambda_2) = \frac12 w'\Sigma w+\lambda_1(\alpha_0-w'\alpha)+\lambda_2(1-w'1_m)$$
+derive the first-order conditions
+$$\frac{\partial L}{\partial w} = 0_m= \Sigma w - \lambda_1\alpha-\lambda_21_m$$
+$$\frac{\partial L}{\partial \lambda_1} = 0= \alpha_0-w'\alpha$$
+$$\frac{\partial L}{\partial \lambda_2} = 0= 1-w'1_m$$
+Solve $w$ in terms of $\lambda_1, \lambda_2$:
+$w_0 =\lambda_1\Sigma^{-1}\alpha+\lambda_2\Sigma^{-1}1_m$
+Solve for $\lambda_1,\lambda_2$ by substituting for w:
+$$\alpha_0 = w_0'\alpha = \lambda_1(\alpha'\Sigma^{-1}\alpha) + \lambda_2(\alpha'\Sigma^{-1}1_m)$$
+$$1 = w_0'1_m = \lambda_1(\alpha'\Sigma^{-1}\alpha) + \lambda_2(\alpha'\Sigma^{-1}1_m)$$
+so we have:
+$$\begin{bmatrix}\alpha_0\\1\end{bmatrix}= \begin{bmatrix}a&b\\b&c\end{bmatrix}\begin{bmatrix}\lambda_1\\\lambda_2\end{bmatrix}$$
+$a = \alpha'\Sigma^{-1}\alpha$, $b= \alpha'\Sigma^{-1}1_m$, $c = 1_m'\Sigma^{-1}1_m$.
+
+With the given values of $\lambda_1$ and $\lambda_2$, the solution portfolio has the minimum variance equal to $$w_0'\Sigma w_0 \\ =\lambda_1^2(\alpha'\Sigma^{-1}\alpha)+2\lambda_1\lambda_2(\alpha'\Sigma^{-1}1_m)+\lambda_2(1_m\Sigma^{-1}1_m) 
+\\=\begin{bmatrix}\lambda_1\\\lambda_2\end{bmatrix}'\begin{bmatrix}a&b\\b&c\end{bmatrix}\begin{bmatrix}\lambda_1\\\lambda_2\end{bmatrix}$$
+substituting $$\begin{bmatrix}\lambda_1\\\lambda_2\end{bmatrix}= \begin{bmatrix}a&b\\b&c\end{bmatrix}^{-1}\begin{bmatrix}\alpha_0\\1\end{bmatrix}$$
+gives optimal portfolio variance:
+$$\begin{bmatrix}\alpha_0\\1\end{bmatrix}'\begin{bmatrix}a&b\\b&c\end{bmatrix}^{-1}\begin{bmatrix}\alpha_0\\1\end{bmatrix} \\= \frac1{ac-b^2}(c\alpha^2_0-2b\alpha_0+a)$$
+
+
+
+
+2. Mean Contional Value at Risk (M-CVaR) framework 
+
+We assume the random vector R has a probabiliy density function denoted by p(r). For a fixed vector w, we compute CDF associated with that vector $w$. 
+$$\Psi(w,\gamma)= \int_{f(w,r)\leq\gamma}p(r)dr $$ 
+VaR is defined as the maximum loss that will not be exceeded within a given time period at a specified confidence level $\alpha\in (0,1)$, a portfolio's (1-$\alpha$)% VaR can be compute by 
+$$VaR_{\alpha}(w) = min\{\gamma\in\mathbf{R}:\Psi(w,\gamma\geq\alpha\}$$ 
+Then the $CVaR_\alpha $ associated with the portfolio is
+$$CVaR_\alpha(w) = \frac{1}{1-\alpha} \int_{f\leq VaR_\alpha (w)} f(w,r)p(r)dr$$
+Therefore, the mean-CVaR portfolio optimization is a problem of:
+$$\underset{w}{Min}\ CVaR_\alpha(w) \\ s.t. w^T \alpha=\alpha_0\\ \sum_{i=1}^{n}w_i=1 ,w_i>0$$ 
+Rockafeller and Uryasev (2000) defined the simpler function to optimize the problem. 
+$$F_\alpha(w,\gamma):=\gamma+\frac{1}{1-\alpha}\int_{f(w,r)\geq\gamma}(f(w, r)-\gamma)p(r)dr$$. Alternatively, $$F_\alpha(w,\gamma) = \gamma + \frac1{1-\alpha}\int[f(w,r)-\gamma]^+p(r)dr$$, 
+where $[x]^+ = max(x,0)$. 
+So that $F_\alpha(w,\gamma)$ is a convex function of $\gamma$ ; $VaR_\alpha$ is the minimizer and $CVaR$ is the minimum value of the convex function.
+
+## 2.3 Asset return volatility
+
+  Generalized autoregressive conditional heteroskedasticity (GARCH) models are used to exam the time-varying conditional variances. To guarantee a postive sign for the conditional variance, we used exponential GARCH model in our case. Our model is computed by using the R package **rugarch**
+
+
+
+## 3. Results
+```{r message=FALSE, warning=FALSE, include=FALSE}
+library("devtools")
+load("timberland.Rdata")
+library(tseries)
+library(forecast)
+library(dygraphs)
+library(PerformanceAnalytics)
+require(ggplot2)
+require(GGally)
+library(psych)
+```
+
+## 3.1 Descriptive analysis 
+This is a interactively graphical representation of selected quarterly return indices from 1987 Q1 to 2020 Q1. Some clear pattern could be observed. First, NCREIF is much less volatile than REIT, SP500, RU2000. Second, REIT follows SP500 closely but NTI doesn't. For example, both REIT and SP500 suffered from a big loss during 2008 financial crisis, whereas NCREIF kept a positive returns until 2009/Q2, where they only got a slightly negative return value. Some people said it's because timberland market tends to lag the public equity market. But some also argues that it's because of the biological growth of trees wouldn't stop as the market went into depression. 
+```{r}
+dygraph(allxts*100, main = "Quarterly returns of analyzed assets", ylab = "Return%")%>% 
+  dyHighlight(highlightSeriesOpts = list(strokeWidth = 3))%>%
+  dyRangeSelector()%>%
+  dyLegend(width = 500)%>%
+  dyOptions(colors = RColorBrewer::brewer.pal(7, "Dark2"))
+
+```
+
+The unconditional correlations of the return series were studied by calculating the correlation coefficients and by plotting the pairwise scatter plots, as showed in the following graph. In this portfolio, the correlation of NCREIF with all financial assets are uniformly low, except for the 3 month Treasury bill (CA). The correlation between big cap (SP500) and small cap (RU2000) are highly significant, and they're almost linearly correlated. Unlike private timber market, the timber REITs shows a closely correlation with the stock market and 10 year treasury bonds. Returns on most asset classes are positively skewed. However, by using the Jarque-Bera test statistic, most of asset returns are not normally distributed.  
+```{r, message=FALSE}
+ggpairs(as.data.frame(allts))+theme_bw()
+```
+```{r}
+# normality
+apply(allts,2,jarque.bera.test)
+```
+
+Summary statistics of all asset classes from 1987 Q1 to 2010 Q1 are reported in the following table. 
+On a quarterly basis, NTI (private timberland index) has the highest mean return of 2.71% and a moderate standard deviation of 3.78%. Timber REITs have a highest standard deviation but a relative lower mean of 2.06%. Treasury bills have both lowest return and standard deviation. 
+```{r}
+describe(allxts*100)[,-1]
+```
+Three risk measures are applied to individual asset, and the results are reported in the following table. 
+```{r}
+res = rbind(
+apply(allts, 2, sd),
+VaR(allts, p=.95, method="modified"),
+ES(allts, p=.95, method="modified")
+)
+row.names(res)[1] = "SD"
+row.names(res)[3] = "CVaR"
+res
+```
+
+```{r message=FALSE, warning=FALSE}
+
+# stationarity
+apply(allts,2,adf.test)
+apply(allts,2,pp.test)
+```
+
+```{r}
+op = par(mfrow=c(1,2))
+#test stationarity and normality
+for(i in 1:ncol(allxts)){
+  #plot acf
+  acf(na.omit(allxts[,i])^2,lag.max = 100,xlab = colnames(allxts)[i], ylab = 'ACF', main=' ')
+  #plot pacf
+  pacf(na.omit(allxts[,i])^2,lag.max = 100,xlab = colnames(allxts)[i], ylab = 'PACF', main=' ')
+}
+
+```
+
+
+## 3.2 Portfolio Optimization
+
+```{r message=FALSE, warning=FALSE}
+library(RColorBrewer)
+library(fPortfolio)
+pacman::p_load(matrixcalc,knitr,dygraphs,ggthemes,highcharter,viridis,tibbletime,timetk,tidyquant,tidyverse,fPortfolio,xts)
+```
+
+```{r}
+#0. Prepare data
+returns.data <- na.omit(allts)
+returns.data %>%tk_tbl()%>%head()
+returns_ts <- as.timeSeries(returns.data)
+spec <- portfolioSpec()
+setSolver(spec) <- "solveRquadprog"
+setNFrontierPoints(spec) <-25
+#1. calculating equal weight portfolio
+nAssets <- ncol(returns_ts)
+setWeights(spec)<-rep(1/nAssets, times = nAssets) 
+constraints <- 'LongOnly'
+portfolioConstraints(returns_ts, spec, constraints)
+
+# calculate the properties of the portfolio
+# Now let us display the results from the equal weights portfolio, the assignment of weights, and the attribution of returns and risk.
+ewPortfolio <- feasiblePortfolio( returns_ts, spec, constraints)
+print(ewPortfolio)
+col <- divPalette(ncol(returns_ts), "RdBu")
+weightsPie(ewPortfolio, radius = 0.7, col = col)
+mtext(text = "Equally Weighted MV Portfolio", side = 3, line = 1.5,
+        font = 2, cex = 0.7, adj = 0)
+weightedReturnsPie(ewPortfolio, radius = 0.7, col = col)
+mtext(text = "Equally Weighted MV Portfolio", side = 3, line = 1.5,
+        font = 2, cex = 0.7, adj = 0)
+covRiskBudgetsPie(ewPortfolio, radius = 0.7, col = col)
+mtext(text = "Equally Weighted MV Portfolio", side = 3, line = 1.5,
+        font = 2, cex = 0.7, adj = 0)
+
+
+# COMPUTE A MINIMUM RISK EFFICIENT PORTFOLIO!
+minriskSpec <- portfolioSpec()
+targetReturn <- getTargetReturn(ewPortfolio@portfolio)["mean"]
+setTargetReturn(minriskSpec) <- targetReturn
+minriskPortfolio <- efficientPortfolio(
+  data = returns_ts,
+  spec = minriskSpec,
+  constraints = "LongOnly")
+print(minriskPortfolio)
+
+col <- qualiPalette(ncol(returns_ts), "Dark2")
+weightsPie(minriskPortfolio, radius = 0.7, col = col)
+mtext(text = "Minimal Risk MV Portfolio", side = 3, line = 1.5,
+        font = 2, cex = 0.7, adj = 0)
+weightedReturnsPie(minriskPortfolio, radius = 0.7, col = col)
+mtext(text = "Minimal Risk MV Portfolio", side = 3, line = 1.5,
+        font = 2, cex = 0.7, adj = 0)
+covRiskBudgetsPie(minriskPortfolio, radius = 0.7, col = col)
+mtext(text = "Minimal Risk MV Portfolio", side = 3, line = 1.5,
+        font = 2, cex = 0.7, adj = 0)
+
+# Tangency Portfolio
+tgSpec <- portfolioSpec()
+setRiskFreeRate(tgSpec) <- 0
+tgPortfolio <- tangencyPortfolio(
+  data = returns_ts,
+  spec = tgSpec,
+  constraints = "LongOnly")
+print(tgPortfolio)
+col <- seqPalette(ncol(returns_ts), "BuPu")
+weightsPie(tgPortfolio, box = FALSE, col = col)
+mtext(text = "Tangency MV Portfolio", side = 3, line = 1.5,
+        font = 2, cex = 0.7, adj = 0)
+weightedReturnsPie(tgPortfolio, box = FALSE, col = col)
+mtext(text = "Tangency MV Portfolio", side = 3, line = 1.5,
+        font = 2, cex = 0.7, adj = 0)
+covRiskBudgetsPie(tgPortfolio, box = FALSE, col = col)
+mtext(text = "Tangency MV Portfolio", side = 3, line = 1.5,
+        font = 2, cex = 0.7, adj = 0)
+#Now we are ready to start the optmization and pass data, specification and constraints to the function portfolioFrontier(). We can examine the result using a standard print() command.
+
+# compute the efficient frontier
+setNFrontierPoints(spec) <-25
+frontier <- portfolioFrontier(returns_ts, spec, constraints)
+print(frontier)
+
+# plot efficient frontier
+tailoredFrontierPlot(object = frontier, mText = "MV Portfolio - LongOnly Constraints",
+                     risk = "Cov")
+
+# plot weights
+weightsPlot(frontier, col=rainbow(dim(returns.data)[2]))
+text <- "Mean-Variance Portfolio - Long Only Constraints"
+mtext(text, side = 3, line = 3, font = 2, cex = 0.9)
+weightedReturnsPlot(frontier)
+covRiskBudgetsPlot(frontier)
+
+set.seed(12)
+frontierPlot(object = frontier, pch = 19, cex = 0.5)
+monteCarloPoints(object = frontier, mcSteps = 5000, pch = 19,
+                   cex = 1,col="#D53E4F")
+frontierpts <- frontierPoints(object = frontier)
+lines(frontierpts, col = "blue", lwd = 2)
+```
+
+GARCH model estimation, Backtesting the risk model and Forecasting
+```{r}
+#Ncreif
+xts.nti <- allxts[, "NTI"]
+xts.npi <- allxts[, "NPI"]
+REITs <- allts[, "Timber REITs"]
+# ARIMA
+# ncreif
+model.arima = auto.arima(xts.nti , trace = F , ic = 'bic')
+model.arima
+checkresiduals(model.arima)
+model.arima3 = auto.arima(xts.npi, stationary = T, trace = F , ic = 'bic')
+model.arima3
+checkresiduals(model.arima3)
+# REIT
+model.arima2 = auto.arima(REITs, trace = T , ic = 'bic')
+checkresiduals(model.arima2)
+
+# box test
+Box.test(model.arima$residuals^2,lag = 12,type="Ljung-Box")
+Box.test(model.arima2$residuals^2, lag = 12, type="Ljung-Box")
+Box.test(model.arima3$residuals^2, lag = 12, type="Ljung-Box")
+
+#colnames(allts)
+for(i in 1:ncol(allts)){
+  y = allts[,i]
+  res=Box.test((y - mean(y))^2, lag = 12,type="Ljung-Box")
+  print(res$p.value)
+}
+
+# GARCH model
+library("rugarch")
+spec = ugarchspec(variance.model = list(model="sGARCH",garchOrder=c(1,1)),
+                  mean.model = list(armaOrder=c(1,1)),
+                  distribution.model = "std")
+# Nelson's egarch model
+egarch.spec = ugarchspec(variance.model=list(model="eGARCH",garchOrder=c(1,1)),
+                         mean.model=list(armaOrder=c(0,0)),  
+                         distribution.model="std")
+garch.fit1 = ugarchfit(egarch.spec, xts.nti)
+# simulation
+set.seed(123)
+tseq = seq(as.Date("1987/1/1"), as.Date("2020/6/1"), "weeks")
+sim = ugarchsim(garch.fit1,n.sim=length(tseq), n.start=0, m.sim=1, startMethod="sample")
+simseries = xts(sim@simulation$seriesSim, order.by = tseq)
+auto.arima(simseries , trace = T , ic = 'bic')
+
+garch.fit1 = ugarchfit(egarch.spec, xts.nti)
+# simulation
+set.seed(1234)
+sim = ugarchsim(garch.fit1,n.sim=2000, n.start=0, m.sim=1, startMethod="sample")
+simseries = as.data.frame(sim@simulation$seriesSim)
+auto.arima(simseries, stationary = TRUE , trace = T , ic = 'bic')
+
+
+plot(garch.fit1, which="all")
+
+# backtesting model
+garchroll1 <- ugarchroll(egarch.spec, data=simseries, n.start = 1000, refit.every = 100, refit.window = "moving",VaR.alpha = 0.01,solver="hybrid", fit.control = list(scale = 1))
+report(garchroll1, type = "VaR",VaR.alpha = 0.01, conf.level = 0.99)
+
+plot(garchroll1, which="all")
+plot(garchroll1, which=4)
+# Forecasting Risk and VaR
+garchfcst <- ugarchforecast(garch.fit1, n.ahead = 12)
+garchfcst
+plot(garchfcst,which=1)
+plot(garchfcst,which=3)
+
+garch.fit2=ugarchfit(egarch.spec,data=xts.nti, solver="hybrid", out.sample=5)
+garchfcst2<-ugarchforecast(garch.fit2, data = NULL, n.ahead = 10, n.roll = 5, external.forecasts = list(mregfor = NULL, vregfor = NULL))
+garchfcst2
+plot(garchfcst2,which=2)
+plot(garchfcst2,which=4)
+```
