@@ -14,7 +14,7 @@ library(vars)
 # 4. Rayonier
 # 5. Weyerhaeuser
 # 6. WEST FRASER TIMBER CO LTD
-
+#FNRE Index ##FTSE Nareit Equity REITS Index
 # extracted data function
 data_extract = function(ticker){
   blpConnect()
@@ -43,7 +43,7 @@ SP500 = data_extract("SPX Index")
 RU2000 = data_extract("RTY Index")
 #Bloomberg Barclays US Agg Gov/Credit Total Return Value Unhedged USD
 T_bonds = data_extract("LUGCTRUU Index")
-
+NAREIT = data_extract("FNRE Index")
 ###############################3 month Treasury bills#######################################
 require(devtools)
 require(DatastreamDSWS2R)
@@ -64,7 +64,7 @@ tbill3mca <- as.data.frame(tbill3mca/100)
 fun = function(d,f) format(as.Date(d,f), "%Y-%m")
 NTI$Date=fun(NTI$Date,"%Y-%m-%d")
 NPI$Date=fun(NPI$Date,"%Y-%m-%d")
-
+NAREIT$Date=fun(NAREIT$Date,"%Y-%m-%d")
 Pope_data$Date=fun(Pope_data$Date,"%Y-%m-%d")
 CatchMark$Date=fun(CatchMark$Date,"%Y-%m-%d")
 Potlatch$Date=fun(Potlatch$Date,"%Y-%m-%d")
@@ -87,6 +87,7 @@ all = merge(all,WEST,by="Date",all = TRUE)
 all = merge(all,SP500[-c(1:2),],by="Date",all = TRUE)
 all = merge(all,RU2000,by="Date",all = TRUE)
 all = merge(all,T_bonds, by="Date", all = TRUE)
+all = merge(all,NAREIT, by="Date", all = TRUE)
 row.names(all) = all$Date
 all$Date=NULL
 #plot.ts(all)
@@ -96,7 +97,7 @@ all[is.na(all)] <- 0
 timberpub_n = 6
 REITs = as.data.frame(rowMeans(all[,c(1:6)]))
 colnames(REITs)= c("Timber REITs")
-all = cbind(all[,c(7:9)], REITs)
+all = cbind(all[,c(7:10)], REITs)
 pub_return = apply(all,2,function(x) diff(x)/head(x,-1))
 Tbill = tbill3mca[row.names(tbill3mca)>=NTI$Date[1]&row.names(tbill3mca)<=NTI$Date[nrow(NTI)],]/100
 NCREIF = merge(NTI, NPI, by="Date")
@@ -106,7 +107,7 @@ all_return$Date=NULL
 
 #convert to time series
 allts = ts(all_return, frequency = 4, start = c(1987, 1))
-colnames(allts) <- c("NTI","NPI", "SP500", "RU2000","T-bonds10Y","Timber REITs","T-bills3M")
+colnames(allts) <- c("NTI","NPI", "SP500", "RU2000","T-bonds10Y","NAREIT","Timber REITs","T-bills3M")
 allxts <- as.xts(allts)
 
 save.image(file = "timberland.RData")
