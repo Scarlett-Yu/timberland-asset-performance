@@ -3,24 +3,28 @@ library(fPortfolio)
 
 pacman::p_load(matrixcalc,knitr,dygraphs,ggthemes,highcharter,viridis,tibbletime,timetk,tidyquant,tidyverse,fPortfolio,xts)
 #0. Prepare data
-allts %>%tk_tbl()%>%head()
-returns_ts <- as.timeSeries(allts)
+returns_ts <- as.timeSeries(na.omit(all.qtr))
+returns_ts2 <- as.timeSeries(na.omit(all.qtr[,c(2:6,8)]))
+colnames(returns_ts2)
 spec <- portfolioSpec()
 setSolver(spec) <- "solveRquadprog"
 setNFrontierPoints(spec) <-15
 
-groupConstraints = c(
-                     #"minsumW[c(1,2,6,7)] = 0.1",
+groupConstraints = c(#"minsumW[c(1,2,6,7)] = 0.1",
                      "maxsumW[c(1,2,6,7)] = 0.3",
                      "minW[c(3,4,5,8)] = c(0.2,0.15,0.1,0.05)"
                      #"maxW[c(3,4,5,8)] = c(0.5,0.2)",
                      )
-
+groupConstraints2 = c(#"minsumW[c(1,6)] = 0.1",
+                      "maxsumW[c(1,5)] = 0.6",
+                      "minW[c(2,3,4,6)] = 0.005"
+                      #"maxW[c(2,3,4,6)] = c(0.5,0.2)",
+                    )
 #1. using equal weights in this case
 nAssets <- ncol(returns_ts)
 setWeights(spec)<-rep(1/nAssets, times = nAssets) 
 constraints <- 'LongOnly'
-portfolioConstraints(returns_ts, spec, constraints)
+portfolioConstraints(returns_ts2, spec, constraints)
 
 # calculate the properties of the portfolio
 # Now let us display the results from the equal weights portfolio, the assignment of weights, and the attribution of returns and risk.
@@ -43,10 +47,19 @@ minriskSpec <- portfolioSpec()
 #targetReturn <- getTargetReturn(ewPortfolio@portfolio)["mean"]
 setTargetReturn(minriskSpec) <- 0.02
 minriskPortfolio <- efficientPortfolio(
-  data = returns_ts,
+  data = returns_ts2,
   spec = minriskSpec,
-  constraints = groupConstraints)
+  constraints = groupConstraints2)
+# Target Returns and Risks:
+#   mean    Cov   CVaR    VaR 
+# 0.0200 0.0276 0.0458 0.0339 
+minriskPortfolio <- efficientPortfolio(
+  data = returns_ts2,
+  spec = minriskSpec,
+  constraints = constraints)
 print(minriskPortfolio)
+
+
 
 png("latex_thesis_template/img/pie.png", width = 200, height = 300, units='mm', res = 500)
 op=par(mfcol=c(3,2))

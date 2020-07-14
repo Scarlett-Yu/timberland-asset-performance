@@ -11,55 +11,54 @@ library("rugarch")
 library(xtable)
 options(xtable.floating = FALSE)
 options(xtable.timestamp = "")
-#####################descriptive statistics############################
 #visualization
-dygraph(allxts*100, main = "Index values of analyzed asset quarterly returns", ylab = "Return%")%>%
+dygraph(all.qtr*100, main = "Index values of analyzed asset quarterly returns", ylab = "Return%")%>%
   dyRangeSelector()%>%
   dyLegend(width = 800)
-#colnames(allxts)
+#colnames(all.qtr)
 
 ##############plot asset return series##############
 png("latex_thesis_template/img/asset_return.png", width = 300, height = 250, units='mm', res = 500)
 op = par(mfrow = c(2, 2))
 fs = par(ps=18)
-#plot(allts[,1], main = "NCREIF timber index", ylab = "Quarterly Return %")
-plot(allts[,c(1,2,6)],
+#plot(all.qtr[,1], main = "NCREIF timber index", ylab = "Quarterly Return %")
+plot(all.qtr[,c(1,2,6)],
            main="Timber vs. Real Estate (a)",
            plot.type="single",
      col=c(1, 2, 3) ,ylab="Quarterly Return %")
-legend("topright", legend = colnames(allts)[c(1,2,6)], col = 1:3, lty=1,bty="n")
-plot(allts[,c(1,3,4)],
+legend("topright", legend = colnames(all.qtr)[c(1,2,6)], col = 1:3, lty=1,bty="n")
+plot(all.qtr[,c(1,3,4)],
      main="Timber vs. Stock Market (b)",
      plot.type="single",
      col=1:3 ,ylab="Quarterly Return %")
-legend("topright", legend = colnames(allts)[c(1,3,4)], col = 1:3, lty=1,bty="n")
-plot(allts[,c(1,5,8)],
+legend("topright", legend = colnames(all.qtr)[c(1,3,4)], col = 1:3, lty=1,bty="n")
+plot(all.qtr[,c(1,5,8)],
      main="Timber vs. Canadian Debt Securities (c)",
      plot.type="single",
      col=1:3 ,ylab="Quarterly Return %")
-legend("topright", legend = colnames(allts)[c(1,5,8)], col = 1:3, lty=1,bty="n")
-plot(allts[,c(1,7)],
+legend("topright", legend = colnames(all.qtr)[c(1,5,8)], col = 1:3, lty=1,bty="n")
+plot(all.qtr[,c(1,7)],
      main = "Timber Private vs. Public (d)",
      plot.type = "single",
      col = 1:2,ylab="Quarterly Return %")
-legend("topright", legend = colnames(allts)[c(1,7)], col = 1:2, lty=1,bty="n")
+legend("topright", legend = colnames(all.qtr)[c(1,7)], col = 1:2, lty=1,bty="n")
 dev.off()
 
 ############plot asset cov ##############
 png("latex_thesis_template/img/correlation.png", width = 200, height = 200, units='mm', res = 600)
-ggpairs(as.data.frame(allts))+theme_bw()
+ggpairs(as.data.frame(all.qtr))+theme_bw()
 dev.off()
 
 ########descriptive#########
-d0 = describe(allxts)[,c(3,4,8,9,11,12)]
+d0 = describe(all.qtr)[,c(3,4,8,9,11,12)]
 
-d1 = VaR(allts, p=.95, method="modified")
-d2 = ES(allts, p=.95, method="modified")
+d1 = VaR(all.qtr, p=.95, method="modified")
+d2 = ES(all.qtr, p=.95, method="modified")
 d12 = t(rbind(d1,d2))
 # normality
 d3 = c()
-for(i in 1:ncol(allts)){
-  p=jarque.bera.test(allts[,i])$p.value
+for(i in 1:ncol(all.qtr)){
+  p=jarque.bera.test(all.qtr[,i])$p.value
   d3 = c(d3,p)
 }
 
@@ -71,11 +70,11 @@ xtable(d)
 
 ##########stationarity#######################
 # stationarity
-apply(allts,2,adf.test)
-#apply(allts,2,pp.test)
+apply(all.qtr,2,adf.test)
+#apply(all.qtr,2,pp.test)
 d4 = c()
-for(i in 1:ncol(allts)){
-  p=adf.test(allts[,i],k=5)$p.value
+for(i in 1:ncol(all.qtr)){
+  p=adf.test(all.qtr[,i],k=5)$p.value
   d4 = c(d4,p)
 }
 d4 = as.data.frame(d4)
@@ -84,34 +83,34 @@ png("latex_thesis_template/img/acf.png", width = 250, height = 400, units='mm', 
 op = par(mfrow=c(4,2))
 fs = par(ps=16)
 #test stationarity and normality
-for(i in 1:ncol(allxts)){
+for(i in 1:ncol(all.qtr)){
   #plot acf
-  acf(na.omit(allxts[,i]),lag.max = 100,xlab = colnames(allxts)[i], ylab = 'ACF', main=' ')
+  acf(na.omit(all.qtr[,i]),lag.max = 100,xlab = colnames(all.qtr)[i], ylab = 'ACF', main=' ')
   #plot pacf
-  #pacf(na.omit(allxts[,i]),lag.max = 100,xlab = colnames(allxts)[i], ylab = 'PACF', main=' ')
+  #pacf(na.omit(all.qtr[,i]),lag.max = 100,xlab = colnames(all.qtr)[i], ylab = 'PACF', main=' ')
 }
 dev.off()
 ##############GARCH model estimation, Backtesting the risk model and Forecasting#############
 # test ARCH effect
-#colnames(allts)
+#colnames(all.qtr)
 res = c()
-for(i in 1:ncol(allts)){
-  y = allts[,i]
+for(i in 1:ncol(all.qtr)){
+  y = all.qtr[,i]
   #log return
   #y = log(y + 1)
   result=Box.test((y - mean(y))^2, lag = 12,type="Ljung-Box")
-  #print(colnames(allts)[i])
+  #print(colnames(all.qtr)[i])
   res = c(res, result$p.value) 
 }
 res = as.data.frame(res)
-row.names(res) <- colnames(allts)
+row.names(res) <- colnames(all.qtr)
 colnames(res) <- "p-value"
 xtable(res)
 # we found NTI NPI NAREIT has significant ARCH effect
 #Ncreif
-xts.nti <- allxts[, "NTI"]
-xts.npi <- allxts[, "NPI"]
-xts.nareit <- allts[,"NAREIT"]
+xts.nti <- all.qtr[, "NTI"]
+xts.npi <- all.qtr[, "NPI"]
+xts.nareit <- all.qtr[,"NAREIT"]
 
 
 # ARMA mean model
@@ -241,3 +240,4 @@ egarch.spec = ugarchspec(variance.model=list(model="eGARCH",garchOrder=c(1,1)),
                          mean.model=list(armaOrder=c(0,0)),  
                          distribution.model="std")
 garch.fit3 = ugarchfit(egarch.spec, xts.nareit)
+#########################VAR############################
