@@ -3,12 +3,19 @@ library(fPortfolio)
 
 pacman::p_load(matrixcalc,knitr,dygraphs,ggthemes,highcharter,viridis,tibbletime,timetk,tidyquant,tidyverse,fPortfolio,xts)
 #0. Prepare data
-returns.data <- na.omit(allts)
-returns.data %>%tk_tbl()%>%head()
-returns_ts <- as.timeSeries(returns.data)
+allts %>%tk_tbl()%>%head()
+returns_ts <- as.timeSeries(allts)
 spec <- portfolioSpec()
 setSolver(spec) <- "solveRquadprog"
-setNFrontierPoints(spec) <-25
+setNFrontierPoints(spec) <-15
+
+groupConstraints = c(
+                     #"minsumW[c(1,2,6,7)] = 0.1",
+                     "maxsumW[c(1,2,6,7)] = 0.3",
+                     "minW[c(3,4,5,8)] = c(0.2,0.15,0.1,0.05)"
+                     #"maxW[c(3,4,5,8)] = c(0.5,0.2)",
+                     )
+
 #1. using equal weights in this case
 nAssets <- ncol(returns_ts)
 setWeights(spec)<-rep(1/nAssets, times = nAssets) 
@@ -17,63 +24,68 @@ portfolioConstraints(returns_ts, spec, constraints)
 
 # calculate the properties of the portfolio
 # Now let us display the results from the equal weights portfolio, the assignment of weights, and the attribution of returns and risk.
-ewPortfolio <- feasiblePortfolio( returns_ts, spec, constraints)
-print(ewPortfolio)
-col <- divPalette(ncol(returns_ts), "RdBu")
-weightsPie(ewPortfolio, radius = 0.7, col = col)
-mtext(text = "Equally Weighted MV Portfolio", side = 3, line = 1.5,
-        font = 2, cex = 0.7, adj = 0)
-weightedReturnsPie(ewPortfolio, radius = 0.7, col = col)
-mtext(text = "Equally Weighted MV Portfolio", side = 3, line = 1.5,
-        font = 2, cex = 0.7, adj = 0)
-covRiskBudgetsPie(ewPortfolio, radius = 0.7, col = col)
-mtext(text = "Equally Weighted MV Portfolio", side = 3, line = 1.5,
-        font = 2, cex = 0.7, adj = 0)
+# ewPortfolio <- feasiblePortfolio(returns_ts, spec, constraints)
+# print(ewPortfolio)
+# col <- divPalette(ncol(returns_ts), "RdBu")
+# op=par(mfcol=c(3,2))
+# weightsPie(ewPortfolio, radius = 0.7, col = col, box = F)
+# mtext(text = "Equally Weighted MV Portfolio", side = 3, line = 1.5,
+#         font = 2, cex = 0.7, adj = 0)
+# weightedReturnsPie(ewPortfolio, radius = 0.7, col = col, box = F)
+# mtext(text = "Equally Weighted MV Portfolio", side = 3, line = 1.5,
+#         font = 2, cex = 0.7, adj = 0)
+# covRiskBudgetsPie(ewPortfolio, radius = 0.7, col = col, box = F)
+# mtext(text = "Equally Weighted MV Portfolio", side = 3, line = 1.5,
+#         font = 2, cex = 0.7, adj = 0)
 
 # COMPUTE A MINIMUM RISK EFFICIENT PORTFOLIO!
 minriskSpec <- portfolioSpec()
-targetReturn <- getTargetReturn(ewPortfolio@portfolio)["mean"]
-setTargetReturn(minriskSpec) <- targetReturn
+#targetReturn <- getTargetReturn(ewPortfolio@portfolio)["mean"]
+setTargetReturn(minriskSpec) <- 0.02
 minriskPortfolio <- efficientPortfolio(
   data = returns_ts,
   spec = minriskSpec,
-  constraints = "LongOnly")
+  constraints = groupConstraints)
 print(minriskPortfolio)
 
+png("latex_thesis_template/img/pie.png", width = 200, height = 300, units='mm', res = 500)
+op=par(mfcol=c(3,2))
+fs = par(ps=18)
 col <- qualiPalette(ncol(returns_ts), "Dark2")
-weightsPie(minriskPortfolio, radius = 0.7, col = col)
+weightsPie(minriskPortfolio, col = col, box = F)
 mtext(text = "Minimal Risk MV Portfolio", side = 3, line = 1.5,
         font = 2, cex = 0.7, adj = 0)
-weightedReturnsPie(minriskPortfolio, radius = 0.7, col = col)
+weightedReturnsPie(minriskPortfolio, col = col, box = F)
 mtext(text = "Minimal Risk MV Portfolio", side = 3, line = 1.5,
         font = 2, cex = 0.7, adj = 0)
-covRiskBudgetsPie(minriskPortfolio, radius = 0.7, col = col)
+covRiskBudgetsPie(minriskPortfolio, col = col, box = F)
 mtext(text = "Minimal Risk MV Portfolio", side = 3, line = 1.5,
         font = 2, cex = 0.7, adj = 0)
 
-globminSpec <- portfolioSpec()
-globminPortfolio <- minvariancePortfolio(
-  data = returns_ts,
-  spec = globminSpec,
-  constraints = "LongOnly")
-print(globminPortfolio)
-col <- seqPalette(ncol(returns_ts), "YlGn")
-weightsPie(globminPortfolio, box = FALSE, col = col)
-mtext(text = "Global Minimum Variance MV Portfolio", side = 3,
-        line = 1.5, font = 2, cex = 0.7, adj = 0)
-weightedReturnsPie(globminPortfolio, box = FALSE, col = col)
-mtext(text = "Global Minimum Variance MV Portfolio", side = 3,
-        line = 1.5, font = 2, cex = 0.7, adj = 0)
-covRiskBudgetsPie(globminPortfolio, box = FALSE, col = col)
-mtext(text = "Global Minimum Variance MV Portfolio", side = 3,
-        line = 1.5, font = 2, cex = 0.7, adj = 0)
+# globminSpec <- portfolioSpec()
+# globminPortfolio <- minvariancePortfolio(
+#   data = returns_ts,
+#   spec = globminSpec,
+#   constraints = groupConstraints)
+# print(globminPortfolio)
+# col <- seqPalette(ncol(returns_ts), "YlGn")
+# weightsPie(globminPortfolio, box = FALSE, col = col)
+# mtext(text = "Global Minimum Variance MV Portfolio", side = 3,
+#         line = 1.5, font = 2, cex = 0.7, adj = 0)
+# weightedReturnsPie(globminPortfolio, box = FALSE, col = col)
+# mtext(text = "Global Minimum Variance MV Portfolio", side = 3,
+#         line = 1.5, font = 2, cex = 0.7, adj = 0)
+# covRiskBudgetsPie(globminPortfolio, box = FALSE, col = col)
+# mtext(text = "Global Minimum Variance MV Portfolio", side = 3,
+#         line = 1.5, font = 2, cex = 0.7, adj = 0)
 
 tgSpec <- portfolioSpec()
-setRiskFreeRate(tgSpec) <- 0
+#for tangency portfolio, mean value of 3m t-bills are set as risk free rate
+setRiskFreeRate(tgSpec) <- mean(allts[,8])
 tgPortfolio <- tangencyPortfolio(
   data = returns_ts,
   spec = tgSpec,
-  constraints = "LongOnly")
+  constraints = groupConstraints)
 print(tgPortfolio)
 col <- seqPalette(ncol(returns_ts), "BuPu")
 weightsPie(tgPortfolio, box = FALSE, col = col)
@@ -85,21 +97,31 @@ mtext(text = "Tangency MV Portfolio", side = 3, line = 1.5,
 covRiskBudgetsPie(tgPortfolio, box = FALSE, col = col)
 mtext(text = "Tangency MV Portfolio", side = 3, line = 1.5,
         font = 2, cex = 0.7, adj = 0)
+dev.off()
 #Now we are ready to start the optmization and pass data, specification and constraints to the function portfolioFrontier(). We can examine the result using a standard print() command.
-
+rm(op)
 # compute the efficient frontier
-setNFrontierPoints(spec) <-25
-frontier <- portfolioFrontier(returns_ts, spec, constraints)
-print(frontier)
 
+setNFrontierPoints(tgSpec) <-50
+tgfrontier <- portfolioFrontier(returns_ts, tgSpec, groupConstraints)
+print(tgfrontier)
+setNFrontierPoints(tgSpec) <-50
+tgfrontier1 <- portfolioFrontier(returns_ts, tgSpec1, groupConstraints)
+print(tgfrontier1)
+png("latex_thesis_template/img/frontier.png", width = 150, height = 200, units='mm', res = 500)
+op=par(mfrow=c(2,1))
 # plot efficient frontier
-tailoredFrontierPlot(object = frontier, mText = "MV Portfolio - LongOnly Constraints",
-                     risk = "Cov")
-
+tailoredFrontierPlot(object = tgfrontier, risk = "Cov")
+text <- "Mean-Variance Portfolio Efficient Frontiers"
+mtext(text, side = 3, line = 0.5, font = 2, cex = 1)
+tailoredFrontierPlot(object = tgfrontier1,risk = "CVaR")
+text <- "Mean-CVaR Portfolio Efficient Frontiers"
+mtext(text, side = 3, line = 0.5, font = 2, cex = 1)
+dev.off()
 # plot weights
-weightsPlot(frontier, col=rainbow(dim(returns.data)[2]))
+weightsPlot(frontier, col=rainbow(dim(returns_ts)[2]))
 weightsPlot(frontier)
-text <- "Mean-Variance Portfolio - Long Only Constraints"
+text <- "Mean-Variance Portfolio -  Constraints"
 mtext(text, side = 3, line = 3, font = 2, cex = 0.9)
 weightedReturnsPlot(frontier)
 covRiskBudgetsPlot(frontier)
@@ -114,17 +136,52 @@ lines(frontierpts, col = "blue", lwd = 2)
 
 
 
-#COMPUTE A FEASIBLE MEAN-CVAR PORTFOLIO
-cvarSpec <- portfolioSpec()
-setType(cvarSpec) <- "CVAR"
-nAssets <- ncol(returns_ts)
-setWeights(cvarSpec) <- rep(1/nAssets, times = nAssets)
-setSolver(cvarSpec) <- "solveRglpk.CVAR"
-ewPortfolio <- feasiblePortfolio(
+#COMPUTE A LOWEST RETURN MEAN-CVAR PORTFOLIO GIVEN A RETURN
+minriskSpec <- portfolioSpec()
+setType(minriskSpec) <- "CVAR"
+setSolver(minriskSpec) <- "solveRglpk.CVAR"
+setTargetReturn(minriskSpec) <- 0.02
+minriskPortfolio <- efficientPortfolio(
   data = returns_ts,
-  spec = cvarSpec,
-  constraints = "LongOnly")
-print(ewPortfolio)
+  spec = minriskSpec,
+  constraints = groupConstraints
+  )
+print(minriskPortfolio)
+
+col <- qualiPalette(ncol(returns_ts), "Dark2")
+weightsPie(minriskPortfolio, col = col, box = F)
+mtext(text = "Minimal Risk CVaR Portfolio", side = 3, line = 1.5,
+      font = 2, cex = 0.7, adj = 0)
+weightedReturnsPie(minriskPortfolio, col = col, box = F)
+mtext(text = "Minimal Risk CVaR Portfolio", side = 3, line = 1.5,
+      font = 2, cex = 0.7, adj = 0)
+covRiskBudgetsPie(minriskPortfolio, col = col, box = F)
+mtext(text = "Minimal Risk CVaR Portfolio", side = 3, line = 1.5,
+      font = 2, cex = 0.7, adj = 0)
+
+
+
+tgSpec1 <- portfolioSpec()
+setType(tgSpec1) <- "CVAR"
+setSolver(tgSpec1) <- "solveRglpk.CVAR"
+
+#for tangency portfolio, mean value of 3m t-bills are set as risk free rate
+setRiskFreeRate(tgSpec1) <- mean(allts[,8])
+tgPortfolio <- tangencyPortfolio(
+  data = returns_ts,
+  spec = tgSpec1,
+  constraints = groupConstraints)
+print(tgPortfolio)
+col <- seqPalette(ncol(returns_ts), "BuPu")
+weightsPie(tgPortfolio, box = FALSE, col = col)
+mtext(text = "Tangency MV Portfolio", side = 3, line = 1.5,
+      font = 2, cex = 0.7, adj = 0)
+weightedReturnsPie(tgPortfolio, box = FALSE, col = col)
+mtext(text = "Tangency MV Portfolio", side = 3, line = 1.5,
+      font = 2, cex = 0.7, adj = 0)
+covRiskBudgetsPie(tgPortfolio, box = FALSE, col = col)
+mtext(text = "Tangency MV Portfolio", side = 3, line = 1.5,
+      font = 2, cex = 0.7, adj = 0)
 
 
 
@@ -151,14 +208,7 @@ print(ewPortfolio)
 
 
 
-
-
-
-# extended constraints: add upper investment limits
-constraints <- c('minW[1:5]=0', 'maxW[1:5]=0.5')
-portfolioConstraints(returns_ts, spec, constraints)
-
-frontier <- portfolioFrontier(returns_ts, spec, constraints)
+frontier <- portfolioFrontier(returns_ts, minriskSpec, constraints)
 
 
 
