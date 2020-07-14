@@ -1,113 +1,74 @@
 library("Rblpapi")
 library("xts")
 library(vars)
-
+library(PerformanceAnalytics)
+require(devtools)
+require(DatastreamDSWS2R)
 # ticker names, input value privary
 # NTI Timberland
 # NTI National Council of Real Estate Investment Fiduciaries Property
 # FTSE NAREIT All Equity REITS Total Return Index is a free float adjusted market capitalization weighted index that includes all tax qualified REITs listed in the NYSE, AMEX, and NASDAQ National Market.
 
 # timberland companies
-# 1. Pope Resources 
-# 2. CatchMark
-# 3. Potlatch
-# 4. Rayonier
-# 5. Weyerhaeuser
-# 6. WEST FRASER TIMBER CO LTD
+# 1. Weyerhaeuser*
+# 2. CatchMark*
+# 3. Potlatch*
+# 4. Rayonier*
+# 
 #FNRE Index ##FTSE Nareit Equity REITS Index
 # extracted data function
-data_extract = function(ticker){
+opt1 <- c("nonTradingDayFillOption"="ACTIVE_DAYS_ONLY",
+         #"nonTradingDayFillMethod" ="NIL_VALUE",
+         #"periodicitySelection" = "QUARTERLY",
+         "currency"="CAD")
+data_extract = function(ticker,opt = opt1){
   blpConnect()
-  opt <- c("nonTradingDayFillOption"="ACTIVE_DAYS_ONLY",
-           "nonTradingDayFillMethod"="PREVIOUS_VALUE",
-           "periodicitySelection" = "QUARTERLY"
-           #"currency"="CAD"
-           )  
   dat = bdh(securities=ticker, fields=c("PX_LAST"),start.date=as.Date("1980-01-01"),options=opt)
-  colnames(dat) <- c("Date",ticker)
-  #blpDisconnect()
-  dat = as.data.frame(dat)
+  dat = lapply(dat, function(d) xts(d[,-1],order.by = as.Date(d[,1])))
+  dat = do.call(merge, dat)
+  colnames(dat) <- ticker
   return(dat)
 }
-NTI = data_extract("TMBERLND Index")
-NTI[,2] = NTI[,2]/100
-NPI = data_extract("NPPITR Index")
-NPI[,2] = NPI[,2]/100
-Pope_data = data_extract("POPE US Equity")
-CatchMark = data_extract("CTT US Equity")
-Potlatch = data_extract("PCH US Equity")
-Rayonier = data_extract("RYN US Equity")
-Weyerhaeuser= data_extract("WY US Equity")
-WEST= data_extract("WFT CN Equity")
-SP500 = data_extract("SPX Index")
-RU2000 = data_extract("RTY Index")
-#Bloomberg Barclays US Agg Gov/Credit Total Return Value Unhedged USD
-T_bonds = data_extract("LUGCTRUU Index")
-NAREIT = data_extract("FNRE Index")
-###############################3 month Treasury bills#######################################
-require(devtools)
-require(DatastreamDSWS2R)
-# extracted data function
 
+NCREIF = data_extract(c("TMBERLND Index","NPPITR Index"))/100
+REITs = data_extract(c("CTT US Equity","PCH US Equity","RYN US Equity","WY US Equity"))
+REITs = Return.calculate(REITs)
+REITs = xts(rowMeans(REITs,na.rm = T) , index(REITs))
+
+Stock_market = data_extract(c("SPX Index","RTY Index","LUGCTRUU Index","FNRE Index"))
+Stock_market = Return.calculate(Stock_market)
+opt2 <- c("nonTradingDayFillOption"="ACTIVE_DAYS_ONLY",
+         #"nonTradingDayFillMethod" ="NIL_VALUE",
+         "periodicitySelection" = "QUARTERLY",
+         "currency"="CAD")
+REITs.q = data_extract(c("CTT US Equity","PCH US Equity","RYN US Equity","WY US Equity"),opt2)
+REITs.q = Return.calculate(REITs.q)
+REITs.q = xts(rowMeans(REITs.q,na.rm = T) , index(REITs.q))
+REITs.q = na.omit(REITs.q)
+Stock_market.q = data_extract(c("SPX Index","RTY Index","LUGCTRUU Index","FNRE Index"),opt2)
+Stock_market.q = Return.calculate(Stock_market.q)
+Stock_market.q = na.omit(Stock_market.q)
+###############################3 month Treasury bills#######################################
 options(Datastream.Username = "ZALB003")
 options(Datastream.Password = "YOUNG607")
 mydsws <- dsws$new()
-tbill3mca <- mydsws$timeSeriesRequest(instrument = "SCMM91D",
+tbill3mca.q <- mydsws$timeSeriesRequest(instrument = "SCMM91D",
                                     datatype = "RY",
                                     startDate = "-40Y",
                                     endDate = "-0D",
                                     frequency = "Q")
-tbill3mca <- as.data.frame(tbill3mca/100)
+tbill3mca.q <- xts(tbill3mca.q/100, order.by = index(tbill3mca.q))
 
 ############################################################################################
-# we only use monthly data, so extract year and month from data
-fun = function(d,f) format(as.Date(d,f), "%Y-%m")
-NTI$Date=fun(NTI$Date,"%Y-%m-%d")
-NPI$Date=fun(NPI$Date,"%Y-%m-%d")
-NAREIT$Date=fun(NAREIT$Date,"%Y-%m-%d")
-Pope_data$Date=fun(Pope_data$Date,"%Y-%m-%d")
-CatchMark$Date=fun(CatchMark$Date,"%Y-%m-%d")
-Potlatch$Date=fun(Potlatch$Date,"%Y-%m-%d")
-Rayonier$Date=fun(Rayonier$Date,"%Y-%m-%d")
-Weyerhaeuser$Date=fun(Weyerhaeuser$Date,"%Y-%m-%d")
-WEST$Date=fun(WEST$Date,"%Y-%m-%d")
+# we only use quarterly data, so extract year and qtr from data
+fun = function(d) as.yearqtr(index(d), format = "%Y-%m-%d")
+#combination of all quarterly data
+index(NCREIF)=fun(NCREIF)
+index(REITs.q)=fun(REITs.q)
+index(Stock_market.q) = fun(Stock_market.q)
+index(tbill3mca.q) = fun(tbill3mca.q)
 
-SP500$Date=fun(SP500$Date,"%Y-%m-%d")
-RU2000$Date = fun(RU2000$Date,"%Y-%m-%d")
-T_bonds$Date = fun(T_bonds$Date,"%Y-%m-%d")
-row.names(tbill3mca) = fun(row.names(tbill3mca) ,"%Y-%m-%d")  
-
-#combination of all public data
-
-all = merge(Pope_data,CatchMark,by="Date",all = TRUE)
-all = merge(all,Potlatch,by="Date",all = TRUE)
-all = merge(all,Rayonier,by="Date",all = TRUE)
-all = merge(all,Weyerhaeuser,by="Date",all = TRUE)
-all = merge(all,WEST,by="Date",all = TRUE)
-all = merge(all,SP500[-c(1:2),],by="Date",all = TRUE)
-all = merge(all,RU2000,by="Date",all = TRUE)
-all = merge(all,T_bonds, by="Date", all = TRUE)
-all = merge(all,NAREIT, by="Date", all = TRUE)
-row.names(all) = all$Date
-all$Date=NULL
-#plot.ts(all)
-# replace NA with 0
-all[is.na(all)] <- 0
-# compute REITs
-timberpub_n = 6
-REITs = as.data.frame(rowMeans(all[,c(1:6)]))
-colnames(REITs)= c("Timber REITs")
-all = cbind(all[,c(7:10)], REITs)
-pub_return = apply(all,2,function(x) diff(x)/head(x,-1))
-Tbill = tbill3mca[row.names(tbill3mca)>=NTI$Date[1]&row.names(tbill3mca)<=NTI$Date[nrow(NTI)],]/100
-NCREIF = merge(NTI, NPI, by="Date")
-all_return = cbind(NCREIF,pub_return[row.names(pub_return)>=NTI$Date[1],],Tbill)
-row.names(all_return) = all_return$Date
-all_return$Date=NULL
-
-#convert to time series
-allts = ts(all_return, frequency = 4, start = c(1987, 1))
-colnames(allts) <- c("NTI","NPI", "SP500", "RU2000","T-bonds10Y","NAREIT","Timber REITs","T-bills3M")
-allxts <- as.xts(allts)
+all.qtr = cbind(NCREIF,Stock_market.q ,REITs.q,  tbill3mca.q)
+colnames(all.qtr) <- c("NTI","NPI", "SP500", "RU2000","T-bonds10Y","NAREIT","Timber REITs","T-bills3M")
 
 save.image(file = "timberland.RData")
