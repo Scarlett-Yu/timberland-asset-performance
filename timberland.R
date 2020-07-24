@@ -35,8 +35,10 @@ REITs = data_extract(c("CTT US Equity","PCH US Equity","RYN US Equity","WY US Eq
 REITs = Return.calculate(REITs)
 REITs = xts(rowMeans(REITs,na.rm = T) , index(REITs))
 
-Stock_market = data_extract(c("SPX Index","RTY Index","LUGCTRUU Index","FNRE Index"))
+Stock_market = data_extract(c("SPX Index","RTY Index"))
 Stock_market = Return.calculate(Stock_market)
+Stock_market.d = na.omit(Stock_market)
+
 opt2 <- c("nonTradingDayFillOption"="ACTIVE_DAYS_ONLY",
          #"nonTradingDayFillMethod" ="NIL_VALUE",
          "periodicitySelection" = "QUARTERLY",
@@ -53,18 +55,28 @@ opt3 <- c("nonTradingDayFillOption"="ACTIVE_DAYS_ONLY",
           #"nonTradingDayFillMethod" ="NIL_VALUE",
           "periodicitySelection" = "MONTHLY",
           "currency"="CAD")
-nareit.m = bdh(securities="FNRE Index", fields=c("PX_LAST"),start.date=as.Date("1980-01-01"),options=opt3)
-tbonds.m = bdh(securities="LUGCTRUU Index", fields=c("PX_LAST"),start.date=as.Date("1980-01-01"),options=opt3)
-reits.m =data_extract(c("CTT US Equity","PCH US Equity","RYN US Equity","WY US Equity"),opt3)
+nandt = data_extract(c("FNRE Index", "LUGCTRUU Index"),opt3)
+nandt = Return.calculate(nandt)
+nareit.m = na.omit(nandt[,1])
+tbonds.m = na.omit(nandt[,2])
+reits.m = data_extract(c("CTT US Equity","PCH US Equity","RYN US Equity","WY US Equity"),opt3)
 reits.m = Return.calculate(reits.m)
 reits.m = xts(rowMeans(reits.m,na.rm = T) , index(reits.m))
 reits.m = na.omit(reits.m)
+Stock_market.m = data_extract(c("SPX Index","RTY Index"),opt3)
+Stock_market.m = Return.calculate(Stock_market.m)
+Stock_market.m = na.omit(Stock_market.m)
 opt4 <- c("nonTradingDayFillOption"="ACTIVE_DAYS_ONLY",
           #"nonTradingDayFillMethod" ="NIL_VALUE",
           "periodicitySelection" = "DAILY",
           "currency"="CAD")
+
 nareit.d = bdh(securities="FNRE Index", fields=c("PX_LAST"),start.date=as.Date("1999-01-01"),options=opt4)
+nareit.d = xts(nareit.d$PX_LAST, order.by = nareit.d$date)
+nareit.d = na.omit(Return.calculate(nareit.d))
 tbonds.d = bdh(securities="LUGCTRUU Index", fields=c("PX_LAST"),start.date=as.Date("1989-01-01"),options=opt4)
+tbonds.d = xts(tbonds.d$PX_LAST, order.by = tbonds.d$date)
+tbonds.d = na.omit(Return.calculate(tbonds.d))
 ###############################3 month Treasury bills#######################################
 options(Datastream.Username = "ZALB003")
 options(Datastream.Password = "YOUNG607")
