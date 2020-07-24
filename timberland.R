@@ -49,9 +49,22 @@ Stock_market.q = data_extract(c("SPX Index","RTY Index","LUGCTRUU Index","FNRE I
 Stock_market.q = Return.calculate(Stock_market.q)
 Stock_market.q = na.omit(Stock_market.q)
 blpConnect()
-tbonds = bdh(securities="LUGCTRUU Index", fields=c("PX_LAST"),start.date=as.Date("1980-01-01"),options=opt1)
-nareit = bdh(securities="FNRE Index", fields=c("PX_LAST"),start.date=as.Date("1980-01-01"),options=opt1)
-
+opt3 <- c("nonTradingDayFillOption"="ACTIVE_DAYS_ONLY",
+          #"nonTradingDayFillMethod" ="NIL_VALUE",
+          "periodicitySelection" = "MONTHLY",
+          "currency"="CAD")
+nareit.m = bdh(securities="FNRE Index", fields=c("PX_LAST"),start.date=as.Date("1980-01-01"),options=opt3)
+tbonds.m = bdh(securities="LUGCTRUU Index", fields=c("PX_LAST"),start.date=as.Date("1980-01-01"),options=opt3)
+reits.m =data_extract(c("CTT US Equity","PCH US Equity","RYN US Equity","WY US Equity"),opt3)
+reits.m = Return.calculate(reits.m)
+reits.m = xts(rowMeans(reits.m,na.rm = T) , index(reits.m))
+reits.m = na.omit(reits.m)
+opt4 <- c("nonTradingDayFillOption"="ACTIVE_DAYS_ONLY",
+          #"nonTradingDayFillMethod" ="NIL_VALUE",
+          "periodicitySelection" = "DAILY",
+          "currency"="CAD")
+nareit.d = bdh(securities="FNRE Index", fields=c("PX_LAST"),start.date=as.Date("1999-01-01"),options=opt4)
+tbonds.d = bdh(securities="LUGCTRUU Index", fields=c("PX_LAST"),start.date=as.Date("1989-01-01"),options=opt4)
 ###############################3 month Treasury bills#######################################
 options(Datastream.Username = "ZALB003")
 options(Datastream.Password = "YOUNG607")
@@ -62,6 +75,12 @@ tbill3mca.q <- mydsws$timeSeriesRequest(instrument = "SCMM91D",
                                     endDate = "-0D",
                                     frequency = "Q")
 tbill3mca.q <- xts(tbill3mca.q/100, order.by = index(tbill3mca.q))
+tbill3mca.m <- mydsws$timeSeriesRequest(instrument = "SCMM91D",
+                                        datatype = "RY",
+                                        startDate = "-40Y",
+                                        endDate = "-0D",
+                                        frequency = "M")
+tbill3mca.m <- xts(tbill3mca.m/100, order.by = index(tbill3mca.m))
 
 ############################################################################################
 # we only use quarterly data, so extract year and qtr from data
