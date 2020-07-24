@@ -48,6 +48,10 @@ REITs.q = na.omit(REITs.q)
 Stock_market.q = data_extract(c("SPX Index","RTY Index","LUGCTRUU Index","FNRE Index"),opt2)
 Stock_market.q = Return.calculate(Stock_market.q)
 Stock_market.q = na.omit(Stock_market.q)
+blpConnect()
+tbonds = bdh(securities="LUGCTRUU Index", fields=c("PX_LAST"),start.date=as.Date("1980-01-01"),options=opt1)
+nareit = bdh(securities="FNRE Index", fields=c("PX_LAST"),start.date=as.Date("1980-01-01"),options=opt1)
+
 ###############################3 month Treasury bills#######################################
 options(Datastream.Username = "ZALB003")
 options(Datastream.Password = "YOUNG607")
