@@ -147,18 +147,18 @@ Box.test(model.arima3$residuals^2, lag = 10, type="Ljung-Box")#<0.05
 
 
 ######### GARCH model #############
-sink('latex_thesis_template//garchoutput1.txt')
-cat("============NTI============")
-garch.fit1
-sink()
-sink('latex_thesis_template//garchoutput2.txt')
-cat("============NPI============")
-garch.fit2
-sink()
-sink('latex_thesis_template//garchoutput3.txt')
-cat("===========NAREIF==========")
-garch.fit3
-sink()
+# sink('latex_thesis_template//garchoutput1.txt')
+# cat("============NTI============")
+# garch.fit1
+# sink()
+# sink('latex_thesis_template//garchoutput2.txt')
+# cat("============NPI============")
+# garch.fit2
+# sink()
+# sink('latex_thesis_template//garchoutput3.txt')
+# cat("===========NAREIF==========")
+# garch.fit3
+# sink()
 
 spec = ugarchspec(variance.model = list(model="sGARCH",garchOrder=c(1,1)),
                   mean.model = list(armaOrder=c(2,2)),
@@ -168,7 +168,7 @@ egarch.spec = ugarchspec(variance.model=list(model="eGARCH",garchOrder=c(1,1)),
                          mean.model=list(armaOrder=c(2,2)),  
                          distribution.model="std")
 
-garch.fit1 = ugarchfit(egarch.spec, log(xts.nti+1))
+garch.fit1 = ugarchfit(egarch.spec, log(nti+1))
 garch.fit1
 plot(garch.fit1, which="all")
 
@@ -187,10 +187,14 @@ report(garchroll1, type = "VaR",VaR.alpha = 0.01, conf.level = 0.99)
 plot(garchroll1, which="all")
 plot(garchroll1, which=4)
 # Forecasting Risk and VaR
-garchfcst <- ugarchforecast(garch.fit1, n.ahead = 4)
+garchfcst <- ugarchforecast(garch.fit1, n.ahead = 40)
 garchfcst
+png("plots/egarch10y.png", width = 300, height = 400, units='mm', res = 500)
+op = par(mfrow=c(2,1))
+fs = par(ps=16)
 plot(garchfcst,which=1)
 plot(garchfcst,which=3)
+dev.off()
 
 garch.fit2=ugarchfit(egarch.spec,data=xts.nti, solver="hybrid", out.sample=5)
 garchfcst2<-ugarchforecast(garch.fit2, data = NULL, n.ahead = 8, n.roll = 5, external.forecasts = list(mregfor = NULL, vregfor = NULL))
