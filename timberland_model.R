@@ -189,7 +189,7 @@ plot(garchroll1, which=4)
 # Forecasting Risk and VaR
 garchfcst <- ugarchforecast(garch.fit1, n.ahead = 40)
 garchfcst
-png("plots/egarch10y.png", width = 300, height = 400, units='mm', res = 500)
+png("plots/egarch10y.png", width = 250, height = 350, units='mm', res = 300)
 op = par(mfrow=c(2,1))
 fs = par(ps=16)
 plot(garchfcst,which=1)
