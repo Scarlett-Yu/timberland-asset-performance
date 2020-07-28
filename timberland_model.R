@@ -66,20 +66,20 @@ d = cbind(d0, d12, d3, d4)
 colnames(d)[9]<-"J-B"
 
 xtable(d)
-###################################
 
 ##########stationarity#######################
 # stationarity
-apply(all.qtr,2,adf.test)
+allxts = na.omit(all.qtr)
+apply(allxts,2,adf.test)
 #apply(all.qtr,2,pp.test)
 d4 = c()
-for(i in 1:ncol(all.qtr)){
-  p=adf.test(all.qtr[,i],k=5)$p.value
+for(i in 1:ncol(allxts)){
+  p=adf.test(allxts[,i],k=5)$p.value
   d4 = c(d4,p)
 }
 d4 = as.data.frame(d4)
 
-png("latex_thesis_template/img/acf.png", width = 250, height = 400, units='mm', res = 500)
+#png("latex_thesis_template/img/acf.png", width = 250, height = 400, units='mm', res = 500)
 op = par(mfrow=c(4,2))
 fs = par(ps=16)
 #test stationarity and normality
@@ -240,4 +240,31 @@ egarch.spec = ugarchspec(variance.model=list(model="eGARCH",garchOrder=c(1,1)),
                          mean.model=list(armaOrder=c(0,0)),  
                          distribution.model="std")
 garch.fit3 = ugarchfit(egarch.spec, xts.nareit)
-#########################VAR############################
+########################ARMAX############################
+library(forecast)
+library(astsa)
+##devtools::install_github("nickpoison/astsa")
+aafc <- function(y, h, xreg = NULL, ...){
+  if(!is.null(xreg)){
+    
+    ncol <- NCOL(xreg)
+    X <- matrix(xreg[1:length(y), ], ncol = ncol)
+    if(NROW(xreg) < length(y) + h)
+      stop("Not enough xreg data for forecasting")
+    newX <- matrix(xreg[length(y) + (1:h), ], ncol = ncol)
+    
+    fit <- auto.arima(y, xreg=X, ...)
+    return(forecast(fit, xreg = newX, h = h))
+    
+  } else {
+    
+    fit <- auto.arima(y, ...)
+    return(forecast(fit, h = h))
+  }
+}
+
+#tsCV(allxts[,1], aafc, xreg = allxts[,c(2:8)], d=1)
+auto.arima(allxts[,1], xreg = allxts[,c(2:8)])
+fit = sarima(allxts[, 1],2,1,0, xreg = allxts[,c(2:8)])
+summary(fit)
+

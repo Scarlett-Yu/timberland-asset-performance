@@ -3,33 +3,29 @@ library(fPortfolio)
 
 pacman::p_load(matrixcalc,knitr,dygraphs,ggthemes,highcharter,viridis,tibbletime,timetk,tidyquant,tidyverse,fPortfolio,xts)
 #0. Prepare data
-returns_ts <- as.timeSeries(na.omit(all.qtr))
+allxts = na.omit(all.qtr)
+returns_ts <- timeSeries(allxts, charvec = as.Date(index(allxts)))
 returns_ts2 <- as.timeSeries(na.omit(all.qtr[,c(2:6,8)]))
 colnames(returns_ts2)
-spec <- portfolioSpec()
-setSolver(spec) <- "solveRquadprog"
-setNFrontierPoints(spec) <-15
-
-groupConstraints = c(#"minsumW[c(1,2,6,7)] = 0.1",
-                     "maxsumW[c(1,2,6,7)] = 0.3",
-                     "minW[c(3,4,5,8)] = c(0.2,0.15,0.1,0.05)"
-                     #"maxW[c(3,4,5,8)] = c(0.5,0.2)",
-                     )
-groupConstraints2 = c(#"minsumW[c(1,6)] = 0.1",
-                      "maxsumW[c(1,5)] = 0.6",
-                      "minW[c(2,3,4,6)] = 0.005"
-                      #"maxW[c(2,3,4,6)] = c(0.5,0.2)",
-                    )
 #1. using equal weights in this case
+spec <- portfolioSpec()
+#the portfolio constraints set up to for 10%-40% real estate and timberland, at least 10% for treasury bonds, at least 10% for large-cap stocks, at least 5% for small-cap stocks and at least 2.5% for treasury bills.
+groupConstraints = c("minsumW[c(1,2,6,7)] = 0.1",
+                     "maxsumW[c(1,2,6,7)] = 0.4",
+                     "minW[c(3,4,5,8)] = c(0.1,0.05,0.1,0.025)",
+                    "maxW[c(3,4,5,8)] = c(0.5,0.5,0.5,0.15)"
+)
+groupConstraints2 = c("minW[c(2,3,4,6)] =  c(0.1,0.05,0.1,0.025)",
+                      "maxW[c(2,3,4,6)] = c(0.5,0.5,0.5,0.15)"
+)
 nAssets <- ncol(returns_ts)
 setWeights(spec)<-rep(1/nAssets, times = nAssets) 
 constraints <- 'LongOnly'
-portfolioConstraints(returns_ts2, spec, constraints)
 
 # calculate the properties of the portfolio
 # Now let us display the results from the equal weights portfolio, the assignment of weights, and the attribution of returns and risk.
-# ewPortfolio <- feasiblePortfolio(returns_ts, spec, constraints)
-# print(ewPortfolio)
+ewPortfolio <- feasiblePortfolio(returns_ts, spec, constraints)
+print(ewPortfolio)
 # col <- divPalette(ncol(returns_ts), "RdBu")
 # op=par(mfcol=c(3,2))
 # weightsPie(ewPortfolio, radius = 0.7, col = col, box = F)
@@ -45,22 +41,38 @@ portfolioConstraints(returns_ts2, spec, constraints)
 # COMPUTE A MINIMUM RISK EFFICIENT PORTFOLIO!
 minriskSpec <- portfolioSpec()
 #targetReturn <- getTargetReturn(ewPortfolio@portfolio)["mean"]
-setTargetReturn(minriskSpec) <- 0.02
+setTargetReturn(minriskSpec) <- 0.024
 minriskPortfolio <- efficientPortfolio(
+  data = returns_ts,
+  spec = minriskSpec,
+  constraints = #constraints
+    groupConstraints
+  )
+print(minriskPortfolio)
+
+# Target Returns and Risks:
+#   mean    Cov   CVaR    VaR 
+# 0.0210 0.0277 0.0449 0.0338 
+minriskPortfolio2 <- efficientPortfolio(
   data = returns_ts2,
   spec = minriskSpec,
   constraints = groupConstraints2)
-# Target Returns and Risks:
-#   mean    Cov   CVaR    VaR 
-# 0.0200 0.0276 0.0458 0.0339 
-minriskPortfolio <- efficientPortfolio(
-  data = returns_ts2,
-  spec = minriskSpec,
-  constraints = constraints)
-print(minriskPortfolio)
+print(minriskPortfolio2)
 
+##backtesting MV
+returns_ts3 = as.xts(returns_ts)
+returns_ts3$benchmark  = as.vector(returns_ts2%*%getWeights(minriskPortfolio2))[27:159]
+returns_ts3 = timeSeries(returns_ts3, charvec = as.Date(index(allxts)))
 
-
+timberPortfolios = portfolioBacktesting(formula = benchmark ~ NTI + NPI + SP500 + RU2000 + T.bonds10Y + NAREIT+Timber.REITs+T.bills3M,data = returns_ts3,spec = minriskSpec,constraints = groupConstraints)
+setWindowsHorizon(timberPortfolios$backtest) = "12m"
+setSmootherLambda(timberPortfolios$backtest) = "6m"
+timbersmooth = portfolioSmoothing(timberPortfolios)
+png("latex_thesis_template/img/mvback.png", width = 150, height = 200, units='mm', res = 500)
+backtestPlot(timbersmooth,cex = 0.6,font=1,family = "mono")
+dev.off()
+#backtestStats(timbersmooth, FUN = "rollingVaR")
+####################plot######################
 png("latex_thesis_template/img/pie.png", width = 200, height = 300, units='mm', res = 500)
 op=par(mfcol=c(3,2))
 fs = par(ps=18)
@@ -94,7 +106,7 @@ mtext(text = "Minimal Risk MV Portfolio", side = 3, line = 1.5,
 
 tgSpec <- portfolioSpec()
 #for tangency portfolio, mean value of 3m t-bills are set as risk free rate
-setRiskFreeRate(tgSpec) <- mean(allts[,8])
+setRiskFreeRate(tgSpec) <- mean(returns_ts[,8])
 tgPortfolio <- tangencyPortfolio(
   data = returns_ts,
   spec = tgSpec,
@@ -153,23 +165,25 @@ lines(frontierpts, col = "blue", lwd = 2)
 minriskSpec <- portfolioSpec()
 setType(minriskSpec) <- "CVAR"
 setSolver(minriskSpec) <- "solveRglpk.CVAR"
-setTargetReturn(minriskSpec) <- 0.02
+setTargetReturn(minriskSpec) <- 0.024
 minriskPortfolio <- efficientPortfolio(
   data = returns_ts,
   spec = minriskSpec,
   constraints = groupConstraints
   )
 print(minriskPortfolio)
-
+png("latex_thesis_template/img/pie2.png", width = 200, height = 300, units='mm', res = 500)
+op=par(mfcol=c(3,2))
+fs = par(ps=18)
 col <- qualiPalette(ncol(returns_ts), "Dark2")
 weightsPie(minriskPortfolio, col = col, box = F)
-mtext(text = "Minimal Risk CVaR Portfolio", side = 3, line = 1.5,
+mtext(text = "Minimal Risk M-CVaR Portfolio", side = 3, line = 1.5,
       font = 2, cex = 0.7, adj = 0)
 weightedReturnsPie(minriskPortfolio, col = col, box = F)
-mtext(text = "Minimal Risk CVaR Portfolio", side = 3, line = 1.5,
+mtext(text = "Minimal Risk M-CVaR Portfolio", side = 3, line = 1.5,
       font = 2, cex = 0.7, adj = 0)
 covRiskBudgetsPie(minriskPortfolio, col = col, box = F)
-mtext(text = "Minimal Risk CVaR Portfolio", side = 3, line = 1.5,
+mtext(text = "Minimal Risk M-CVaR Portfolio", side = 3, line = 1.5,
       font = 2, cex = 0.7, adj = 0)
 
 
@@ -179,7 +193,7 @@ setType(tgSpec1) <- "CVAR"
 setSolver(tgSpec1) <- "solveRglpk.CVAR"
 
 #for tangency portfolio, mean value of 3m t-bills are set as risk free rate
-setRiskFreeRate(tgSpec1) <- mean(allts[,8])
+setRiskFreeRate(tgSpec1) <- mean(returns_ts[,-1])
 tgPortfolio <- tangencyPortfolio(
   data = returns_ts,
   spec = tgSpec1,
@@ -187,16 +201,24 @@ tgPortfolio <- tangencyPortfolio(
 print(tgPortfolio)
 col <- seqPalette(ncol(returns_ts), "BuPu")
 weightsPie(tgPortfolio, box = FALSE, col = col)
-mtext(text = "Tangency MV Portfolio", side = 3, line = 1.5,
+mtext(text = "Tangency M-CVaR Portfolio", side = 3, line = 1.5,
       font = 2, cex = 0.7, adj = 0)
 weightedReturnsPie(tgPortfolio, box = FALSE, col = col)
-mtext(text = "Tangency MV Portfolio", side = 3, line = 1.5,
+mtext(text = "Tangency M-CVaR Portfolio", side = 3, line = 1.5,
       font = 2, cex = 0.7, adj = 0)
 covRiskBudgetsPie(tgPortfolio, box = FALSE, col = col)
-mtext(text = "Tangency MV Portfolio", side = 3, line = 1.5,
+mtext(text = "Tangency M-CVaR Portfolio", side = 3, line = 1.5,
       font = 2, cex = 0.7, adj = 0)
+dev.off()
+##backtesting M-CVaR
 
-
+timberPortfolios = portfolioBacktesting(formula = benchmark ~ NTI + NPI + SP500 + RU2000 + T.bonds10Y + NAREIT+Timber.REITs+T.bills3M,data = returns_ts3,spec = minriskSpec,constraints = groupConstraints)
+setSmootherLambda(timberPortfolios$backtest) = "6m"
+timbersmooth = portfolioSmoothing(timberPortfolios)
+png("latex_thesis_template/img/mcarback.png", width = 150, height = 200, units='mm', res = 500)
+backtestPlot(timbersmooth,cex = 0.6,font=1,family = "mono")
+#backtestStats(timbersmooth, FUN = "rollingVaR")
+dev.off()
 
 
 
