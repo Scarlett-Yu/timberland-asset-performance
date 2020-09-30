@@ -108,9 +108,9 @@ colnames(res) <- "p-value"
 xtable(res)
 # we found NTI NPI NAREIT has significant ARCH effect
 #Ncreif
-xts.nti <- all.qtr[, "NTI"]
-xts.npi <- all.qtr[, "NPI"]
-xts.nareit <- all.qtr[,"NAREIT"]
+xts.nti <- allxts[, "NTI"]
+xts.npi <- allxts[, "NPI"]
+xts.nareit <- allxts[,"NAREIT"]
 
 
 # ARMA mean model
@@ -168,7 +168,7 @@ egarch.spec = ugarchspec(variance.model=list(model="eGARCH",garchOrder=c(1,1)),
                          mean.model=list(armaOrder=c(2,2)),  
                          distribution.model="std")
 
-garch.fit1 = ugarchfit(egarch.spec, log(nti+1))
+garch.fit1 = ugarchfit(egarch.spec, xts.nti)
 garch.fit1
 plot(garch.fit1, which="all")
 
@@ -189,12 +189,17 @@ plot(garchroll1, which=4)
 # Forecasting Risk and VaR
 garchfcst <- ugarchforecast(garch.fit1, n.ahead = 40)
 garchfcst
-png("plots/egarch10y.png", width = 250, height = 350, units='mm', res = 300)
-op = par(mfrow=c(2,1))
-fs = par(ps=16)
+pre_garch = cbind(garchfcst@forecast$seriesFor, garchfcst@forecast$sigmaFor)
+pre_garch = as.data.frame(pre_garch)
+colnames(pre_garch)<-c("return", "std")
+pre_garch$date = as.yearqtr(seq(as.Date("2020-04-01"), by = "quarter", length.out = 40))
+write.csv(pre_garch, file = "garch_predict.csv", row.names = FALSE)
+# png("plots/egarch10y.png", width = 250, height = 350, units='mm', res = 300)
+# op = par(mfrow=c(2,1))
+# fs = par(ps=16)
 plot(garchfcst,which=1)
 plot(garchfcst,which=3)
-dev.off()
+#dev.off()
 
 garch.fit2=ugarchfit(egarch.spec,data=xts.nti, solver="hybrid", out.sample=5)
 garchfcst2<-ugarchforecast(garch.fit2, data = NULL, n.ahead = 8, n.roll = 5, external.forecasts = list(mregfor = NULL, vregfor = NULL))

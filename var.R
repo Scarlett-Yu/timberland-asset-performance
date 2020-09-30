@@ -10,5 +10,6 @@ pre = predict(fit, n.ahead = 40, ci=0.95)
 pre$fcst$NTI
 png("plots/var10y.png", width = 250, height = 200, units='mm', res = 300)
 fs = par(ps=16)
-plot(pre, plot.type = "single", names = "NTI")
+plot(pre, plot.type = "single", x,names = "NTI")
+abline(h = 0.00, col="red")
 dev.off()

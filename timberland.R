@@ -32,8 +32,7 @@ data_extract = function(ticker,opt = opt1){
 
 NCREIF = data_extract(c("TMBERLND Index","NPPITR Index"))/100
 REITs = data_extract(c("CTT US Equity","PCH US Equity","RYN US Equity","WY US Equity"))
-REITs = Return.calculate(REITs)
-REITs = xts(rowMeans(REITs,na.rm = T) , index(REITs))
+
 
 Stock_market = data_extract(c("SPX Index","RTY Index"))
 Stock_market = Return.calculate(Stock_market)
@@ -63,9 +62,11 @@ reits.m = data_extract(c("CTT US Equity","PCH US Equity","RYN US Equity","WY US 
 reits.m = Return.calculate(reits.m)
 reits.m = xts(rowMeans(reits.m,na.rm = T) , index(reits.m))
 reits.m = na.omit(reits.m)
+index(reits.m) = as.yearmon(index(reits.m))
 Stock_market.m = data_extract(c("SPX Index","RTY Index"),opt3)
 Stock_market.m = Return.calculate(Stock_market.m)
 Stock_market.m = na.omit(Stock_market.m)
+index(Stock_market.m) = as.yearmon(index(Stock_market.m))
 opt4 <- c("nonTradingDayFillOption"="ACTIVE_DAYS_ONLY",
           #"nonTradingDayFillMethod" ="NIL_VALUE",
           "periodicitySelection" = "DAILY",
@@ -77,6 +78,26 @@ nareit.d = na.omit(Return.calculate(nareit.d))
 tbonds.d = bdh(securities="LUGCTRUU Index", fields=c("PX_LAST"),start.date=as.Date("1989-01-01"),options=opt4)
 tbonds.d = xts(tbonds.d$PX_LAST, order.by = tbonds.d$date)
 tbonds.d = na.omit(Return.calculate(tbonds.d))
+#NHSPSTOT Index:US New Privately Owned Housing Units Started by Structure Total SAAR »
+housing = bdh(securities="NHSPSTOT Index", fields=c("PX_LAST"),start.date=as.Date("1986-01-01"),options=opt2)
+housing = xts(housing$PX_LAST, order.by = housing$date)
+housing = na.omit(Return.calculate(housing))
+index(housing) = as.yearqtr(index(housing))
+colnames(housing) = 'housing'
+#CPI
+CPI = bdh(securities="CPI YOY Index", fields=c("PX_LAST"),start.date=as.Date("1986-01-01"),options=opt2)
+
+#US Producer Price Index Lumber & Plywood                                        
+fdata = data_extract(c("NHSPSTOT Index", "CPI YOY Index", "PPIRLUP Index"),opt3)
+index(fdata) = as.yearmon(index(fdata))
+fdata[,3] = Return.calculate(fdata[,3])
+fdata = cbind(fdata, reits.m, Stock_market.m)
+
+
+fdataq = data_extract(c("NHSPSTOT Index", "CPI YOY Index", "PPIRLUP Index"),opt2)
+index(fdataq) = as.yearqtr(index(fdataq))
+fdataq[,3] = Return.calculate(fdataq[,3])
+
 ###############################3 month Treasury bills#######################################
 options(Datastream.Username = "ZALB003")
 options(Datastream.Password = "YOUNG607")
@@ -105,5 +126,7 @@ index(tbill3mca.q) = fun(tbill3mca.q)
 
 all.qtr = cbind(NCREIF,Stock_market.q ,REITs.q,  tbill3mca.q)
 colnames(all.qtr) <- c("NTI","NPI", "SP500", "RU2000","T-bonds10Y","NAREIT","Timber REITs","T-bills3M")
+allxts = na.omit(all.qtr)
+fdataq = cbind(fdataq, all.qtr)
 
 save.image(file = "timberland.RData")
